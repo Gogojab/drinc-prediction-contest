@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+      <link rel="stylesheet" href="bootstrap.css">
+      <title>DRINC Prediction Contest</title>
+    </head>
+    <body>
+        <form action="confirm_purchase" method="post">
+            <p>Stock to buy:</p>
+            <select name="stock">
+              #for $i, $stock in enumerate($stocks)
+              <option>$stock</option>
+              #end for
+            </select>
+            <p>Pounds to spend:</p>
+            <input type="number" name="cost" value="" size="8" maxlength="6"/>
+            <p><input type="submit" value="Submit"/></p>
+        </form>
+    </body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" href="bootstrap.css">
+    <title>DRINC Prediction Contest</title>
+  </head>
+  <body>
+    <div class="row-fluid">
+      <div id="stocks" class="span2">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Recent price (p)</th>
+            </tr>
+          </thead>
+          <tbody>
+            #for $i, $stock in enumerate($stocks)
+            <tr>
+              <td><a href="https://www.google.co.uk/finance?q=$stock.ticker">$stock.ticker</a></td>
+              <td>$stock.price</td>
+            </tr>
+            #end for
+          </tbody>
+        </table>
+      </div>
+      <div class="span10">
+        <div class="row">
+          <div id="heading" class="span10">
+            <h1>DRINC Prediction Contest</h1>
+          </div>
+        </div>
+        <div class="row">
+          <div id="account" class="span5">
+            <h2>Your account</h2>
+            <h3>Transactions</h3>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Stock</th>
+                  <th>Purchase price (p)</th>
+                  <th>Amount spent (&pound;)</th>
+                  <th>Value (&pound;)</th>
+                </tr>
+              </thead>
+              <tbody>
+                #for $i, $transaction in enumerate($transactions)
+                <tr>
+                  <td>$transaction.stock</td>
+                  <td>$transaction.price</td>
+                  <td>$transaction.cost</td>
+                  <td>$transaction.value</td>
+                </tr>
+                #end for
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>$spent</td>
+                  <td>$total</td>
+                </tr>
+              </tfoot>
+            </table>
+            <h3>Balance</h3>
+            You have &pound;$cash cash.<br>
+            #if $cash > 0 and len($transactions) < 3
+            <h3>Buy</h3>
+            Click <strong><a href=purchase>here</a></strong> to buy.  Unspent money isn't worth anything!
+            #end if
+          </div>
+          <div id="leaderboard" class="span5">
+            <h2>Leaderboard</h2>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Current value (&pound;)</th>
+                </tr>
+              </thead>
+              <tbody>
+                #for $i, $user in enumerate($users)
+                <tr>
+                  <td>$user.initials</td>
+                  <td>$user.value</td>
+                </tr>
+                #end for
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
