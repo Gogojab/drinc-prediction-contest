@@ -8,7 +8,7 @@
   <body>
     <div class="row-fluid">
       <div id="stocks" class="span2">
-        <table class="table">
+        <table class="table table-striped">
           <thead>
             <tr>
               <th>Ticker</th>
@@ -32,44 +32,7 @@
           </div>
         </div>
         <div class="row">
-          <div id="account" class="span5">
-            <h2>Your account</h2>
-            <h3>Transactions</h3>
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Stock</th>
-                  <th>Purchase price (p)</th>
-                  <th>Amount spent (&pound;)</th>
-                  <th>Value (&pound;)</th>
-                </tr>
-              </thead>
-              <tbody>
-                #for $i, $transaction in enumerate($transactions)
-                <tr>
-                  <td>$transaction.stock</td>
-                  <td>$transaction.price</td>
-                  <td>$transaction.cost</td>
-                  <td>$transaction.value</td>
-                </tr>
-                #end for
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td></td>
-                  <td></td>
-                  <td>$spent</td>
-                  <td>$total</td>
-                </tr>
-              </tfoot>
-            </table>
-            <h3>Balance</h3>
-            You have &pound;$cash cash.<br>
-            #if $cash > 0 and len($transactions) < 3
-            <h3>Buy</h3>
-            Click <strong><a href=purchase>here</a></strong> to buy.  Unspent money isn't worth anything!
-            #end if
-          </div>
+          $inner
           <div id="leaderboard" class="span5">
             <h2>Leaderboard</h2>
             <table class="table table-striped">

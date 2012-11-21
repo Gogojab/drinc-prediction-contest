@@ -50,6 +50,23 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def home(self):
         """Home page for the predictions contest"""
+        account = self.get_account_details()
+        innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account])
+        page = self.make_page(str(innerTemplate))
+        return page
+
+    def make_page(self, inner):
+        """Make a page, by putting the inner section into our wrapper"""
+        data = [{'ticker':ticker, 'price':self.get_stock_price(ticker)} for ticker in stocks]
+        users = self.get_leaderboard()
+        t = Template(file=self.cwd + '/wrapper.tmpl',
+                     searchList=[{'inner':inner,
+                                  'stocks':data,
+                                  'users':users}])
+        return str(t)
+
+    def get_account_details(self):
+        """Get the details describing a user account"""
         user = cherrypy.request.login.split('@')[0].upper()
         try:
             transaction_ids = transactions_by_user_col.get(user)
@@ -75,19 +92,8 @@ class PredictionsContest(Application):
 
         cash = 1000 - spent
 
-        data = [{'ticker':ticker, 'price':self.get_stock_price(ticker)} for ticker in stocks]
-
-        users = self.get_leaderboard()
-
-        t = Template(file=self.cwd + '/home.tmpl',
-                     searchList=[{'transactions':transactions,
-                                  'total':total,
-                                  'spent':spent,
-                                  'cash':cash,
-                                  'stocks':data,
-                                  'users':users}])
-        return str(t)
-
+        account = {'transactions':transactions, 'total':total, 'spent':spent, 'cash':cash}
+        return account
 
     def get_current_value(self, transaction):
         """Gets the current value of a transaction, as read from the database"""
@@ -126,15 +132,18 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def purchase(self):
         """Page to purchase a stock"""
-        t = Template(file=self.cwd + '/purchase.tmpl',
-                     searchList=[{'stocks':stocks}])
-        return str(t)
+        innerTemplate = Template(file=self.cwd + '/purchase.tmpl', searchList=[{'stocks':stocks}])
+        page = self.make_page(str(innerTemplate))
+        return page
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def confirm_purchase(self, stock, cost):
+    def confirm_purchase(self, stock, cost, cancel=False):
         """Page to confirm the purchase of a stock"""
+        if cancel:
+            raise cherrypy.HTTPRedirect('home')
+
         try:
             pounds = Decimal(cost).quantize(Decimal('.01'), rounding=ROUND_DOWN)
         except:
@@ -149,9 +158,10 @@ class PredictionsContest(Application):
         cherrypy.session['price'] = price
         cherrypy.session['cost'] = pennies
         cherrypy.session['offerExpires'] = datetime.utcnow() + timedelta(seconds=30)
-        t = Template(file=self.cwd + '/confirm_purchase.tmpl',
-                     searchList=[{'stock':stock, 'cost': pounds, 'price':price}])
-        return str(t)
+        innerTemplate = Template(file=self.cwd + '/confirm_purchase.tmpl',
+                                 searchList=[{'stock':stock, 'cost': pounds, 'price':price}])
+        page = self.make_page(str(innerTemplate))
+        return page
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
