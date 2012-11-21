@@ -123,8 +123,6 @@ class PredictionsContest(Application):
 
         sort_key = lambda data: data['value']
         users = sorted(users, key=sort_key, reverse=True)
-        t = Template(file=self.cwd + '/leaderboard.tmpl',
-                     searchList=[{'users':sorted(users, key=sort_key, reverse=True)}])
         return users
 
     @cherrypy.expose
