@@ -25,6 +25,7 @@ deadline = datetime(2012, 11, 26, 18)
 db_lock = threading.Lock()
 pool = pycassa.ConnectionPool('PredictionContest')
 transactions_by_user_col = pycassa.ColumnFamily(pool, 'TransactionsByUser')
+transactions_by_stock_col = pycassa.ColumnFamily(pool, 'TransactionsByStock')
 transactions_col = pycassa.ColumnFamily(pool, 'Transactions')
 stock_history_col = pycassa.ColumnFamily(pool, 'StockHist')
 stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
@@ -246,7 +247,8 @@ class PredictionsContest(Application):
         transaction_id = uuid.uuid4()
 
         transactions_col.insert(transaction_id, transaction)
-        transactions_by_user_col.insert(user, {transaction_id:0})
+        transactions_by_user_col.insert(user, {transaction_id:stock})
+        transactions_by_stock_col.insert(stock, {transaction_id:cost})
 
     def get_stock_history_from_google(self, ticker):
         """Goes to the internet, and returns a dictionary in which the keys are dates,
