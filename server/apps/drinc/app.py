@@ -19,6 +19,7 @@ members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR',
 stocks = ['LON:BYG', 'LON:CINE', 'LON:CMX', 'LON:DLAR', 'LON:EMG', 'LON:FSTA', 'LON:GAW',
           'LON:GRG', 'LON:HIK', 'LON:LLOY', 'LON:MRO', 'LON:NETD', 'LON:NXR', 'LON:OMG',
           'LON:PSN', 'LON:SHP', 'LON:SLN', 'LON:TSCO', 'LON:ZZZ']
+deadline = datetime(2012, 11, 26, 18)
 
 # Database access.
 db_lock = threading.Lock()
@@ -50,7 +51,8 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def home(self):
         """Home page for the predictions contest"""
-        account = self.get_account_details()
+        user = cherrypy.request.login.split('@')[0].upper()
+        account = self.get_account_details(user)
         innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account])
         page = self.make_page(str(innerTemplate))
         return page
@@ -65,9 +67,8 @@ class PredictionsContest(Application):
                                   'users':users}])
         return str(t)
 
-    def get_account_details(self):
+    def get_account_details(self, user):
         """Get the details describing a user account"""
-        user = cherrypy.request.login.split('@')[0].upper()
         try:
             transaction_ids = transactions_by_user_col.get(user)
             transactions = [transactions_col.get(tid) for tid in transaction_ids]
@@ -90,7 +91,10 @@ class PredictionsContest(Application):
             total = total + value
             spent = spent + cost
 
-        cash = 1000 - spent
+        if datetime.now() < deadline:
+            cash = 1000 - spent
+        else:
+            cash = 0
 
         account = {'transactions':transactions, 'total':total, 'spent':spent, 'cash':cash}
         return account
@@ -169,7 +173,7 @@ class PredictionsContest(Application):
         if cancel:
             raise cherrypy.HTTPRedirect('home')
 
-        if datetime.utcnow() > datetime(2012, 11, 26, 18):
+        if datetime.now() > deadline:
             raise cherrypy.HTTPRedirect('home')
 
         # Retrieve, and then expire, session data containing details of purchase.
