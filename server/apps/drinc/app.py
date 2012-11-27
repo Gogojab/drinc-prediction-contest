@@ -69,6 +69,9 @@ class PredictionsContest(Application):
         if datetime.now() < deadline:
             raise cherrypy.HTTPRedirect("home")
 
+        if user not in members:
+            raise cherrypy.HTTPRedirect("home")
+
         account = self.get_account_details(user)
         innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account, {'user':user}])
         page = self.make_page(str(innerTemplate))
