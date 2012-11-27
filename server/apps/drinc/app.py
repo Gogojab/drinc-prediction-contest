@@ -38,6 +38,7 @@ class PredictionsContest(Application):
     def build(self):
         self.set_config(self.cwd + '/application.conf')
         self.add_page('/home', self.home)
+        self.add_page('/account', self.account)
         self.add_page('/purchase', self.purchase)
         self.add_page('/submit_purchase', self.submit_purchase)
         self.add_page('/confirm_purchase', self.confirm_purchase)
@@ -53,8 +54,23 @@ class PredictionsContest(Application):
     def home(self):
         """Home page for the predictions contest"""
         user = cherrypy.request.login.split('@')[0].upper()
+        if datetime.now() > deadline:
+            raise cherrypy.HTTPRedirect("account?user=%s" % user)
+
         account = self.get_account_details(user)
-        innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account])
+        innerTemplate = Template(file=self.cwd + '/home.tmpl', searchList=[account])
+        page = self.make_page(str(innerTemplate))
+        return page
+
+    @cherrypy.expose
+    @cherrypy.tools.auth_kerberos()
+    @cherrypy.tools.auth_members(users=members)
+    def account(self, user):
+        if datetime.now() < deadline:
+            raise cherrypy.HTTPRedirect("home")
+
+        account = self.get_account_details(user)
+        innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account, {'user':user}])
         page = self.make_page(str(innerTemplate))
         return page
 

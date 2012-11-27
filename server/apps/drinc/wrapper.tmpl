@@ -35,7 +35,7 @@
           $inner
           <div id="standings" class="span3">
             <h2>Standings</h2>
-            <table class="table table-condensed table-striped">
+            <table class="table table-condensed table-striped table-hover">
               <thead>
                 <tr>
                   <th>Member</th>
@@ -45,7 +45,7 @@
               <tbody>
                 #for $i, $user in enumerate($users)
                 <tr>
-                  <td>$user.initials</td>
+                  <td><a href="account?user=$user.initials">$user.initials</a></td>
                   <td>$user.value</td>
                 </tr>
                 #end for
@@ -55,5 +55,7 @@
         </div>
       </div>
     </div>
+    <script language="javascript" src="jquery.js"></script>
+    <script language="javascript" src="clickable-row.js"></script>
   </body>
 </html>

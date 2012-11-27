@@ -1,5 +1,5 @@
 <div id="account" class="span7">
-  <h2>$user's account</h2>
+  <h2>Account</h2>
   <h3>Transactions</h3>
   <table class="table table-bordered table-striped">
     <thead>
@@ -29,4 +29,11 @@
       </tr>
     </tfoot>
   </table>
+  <h3>Balance</h3>
+  <p>You have &pound;$cash cash.</p>
+  #if $cash > 0 and len($transactions) < 3
+  <h3>Buy</h3>
+  <p>Click <strong><a href=purchase>here</a></strong> to buy.  Unspent money isn't worth anything!</p>
+  <p>Don't forget that you can't make more than three purchases.</p>
+  #end if
 </div>
