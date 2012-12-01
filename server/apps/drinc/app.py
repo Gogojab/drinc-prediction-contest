@@ -42,6 +42,7 @@ class PredictionsContest(Application):
         self.set_config(self.cwd + '/application.conf')
         self.add_page('/home', self.home)
         self.add_page('/account', self.account)
+        self.add_page('/analysis', self.analysis)
         self.add_page('/purchase', self.purchase)
         self.add_page('/submit_purchase', self.submit_purchase)
         self.add_page('/confirm_purchase', self.confirm_purchase)
@@ -143,6 +144,41 @@ class PredictionsContest(Application):
             db_lock.release()
 
         raise cherrypy.HTTPRedirect('home')
+
+    @cherrypy.expose
+    @cherrypy.tools.auth_kerberos()
+    @cherrypy.tools.auth_members(users=members)
+    def analysis(self):
+        """Analysis page"""
+        user = cherrypy.request.login.split('@')[0].upper()
+        if datetime.now() < deadline:
+            raise cherrypy.HTTPRedirect('home')
+
+        spent = self.get_all_stock_expenditure()
+        format = lambda k, v: "{ name: '%s', y: %d }" % (k,v)
+        getKey = lambda (k,v): v
+        json = [format(k,v) for (k,v) in sorted(spent.iteritems(), key=getKey)]
+        expenditure = "[" + ",".join(json) + "]"
+        return self.make_page('analysis.tmpl', {'expenditure':expenditure})
+
+    def get_all_stock_expenditure(self):
+        """Figure out how much was spent on each stock"""
+        expenditure = {}
+        for ticker in stocks:
+            spent = self.get_stock_expenditure(ticker)
+            if spent != 0:
+                expenditure[ticker] = spent
+        return expenditure
+
+    def get_stock_expenditure(self, ticker):
+        """Figure out how much was spent on a given stock"""
+        try:
+            transactions = transactions_by_stock_col.get(ticker)
+            spent = sum([int(x) for x in transactions.values()])
+        except:
+            spent = 0
+
+        return spent
 
     def make_page(self, template='home.tmpl', details={}):
         """Make a page: figure out the generic information required for the wrapper and then

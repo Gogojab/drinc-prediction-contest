@@ -1,0 +1,48 @@
+#from wrapper import wrapper
+#extends wrapper
+
+#def navigationList
+<ul class="nav">
+  <li><a href="home">Home</a></li>
+  <li class="active"><a href="analysis">Analysis</a></li>
+</ul>
+#end def
+
+#def inner
+<div id="analysis" class="span7" style="min-width: 400px; height: 400px">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="highcharts.js"></script>
+    <script type="text/javascript">
+      var chart;
+      \$(document).ready(function() {
+        chart = new Highcharts.Chart({
+          chart: {
+            renderTo: 'analysis',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+          },
+          title: {text: 'Where the money went' },
+          credits: { enabled: false },
+          plotOptions: {
+            pie: {
+              allowPointSelect: true,
+              cursor: 'pointer'
+            }
+          },
+          tooltip: {
+            formatter: function() {
+              format = this.point.name + " \xa3" + this.point.y / 100;
+              return format;
+            }
+          },
+          series: [{
+            type: 'pie',
+            name: 'Total cash spent',
+            data: $expenditure
+          }]
+        });
+      });
+    </script>
+</div>
+#end def
