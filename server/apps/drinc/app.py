@@ -12,6 +12,8 @@ import time
 import urllib2
 import uuid
 import locale
+import sys
+
 locale.setlocale(locale.LC_NUMERIC, '')
 
 application_class_name = 'PredictionsContest'
@@ -33,6 +35,7 @@ stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
 class PredictionsContest(Application):
     def __init__(self, root_url='', cwd=''):
         Application.__init__(self, root_url, cwd)
+        sys.path.append(cwd)
         self.sched = Scheduler()
 
     def build(self):
@@ -58,9 +61,7 @@ class PredictionsContest(Application):
             raise cherrypy.HTTPRedirect("account?user=%s" % user)
 
         account = self.get_account_details(user)
-        innerTemplate = Template(file=self.cwd + '/home.tmpl', searchList=[account])
-        page = self.make_page(str(innerTemplate))
-        return page
+        return self.make_page('home.tmpl', account)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -73,90 +74,14 @@ class PredictionsContest(Application):
             raise cherrypy.HTTPRedirect("home")
 
         account = self.get_account_details(user)
-        innerTemplate = Template(file=self.cwd + '/account.tmpl', searchList=[account, {'user':user}])
-        page = self.make_page(str(innerTemplate))
-        return page
-
-    def make_page(self, inner):
-        """Make a page, by putting the inner section into our wrapper"""
-        data = [{'ticker':ticker, 'price':self.get_stock_price(ticker)} for ticker in stocks]
-        users = self.get_leaderboard()
-        t = Template(file=self.cwd + '/wrapper.tmpl',
-                     searchList=[{'inner':inner,
-                                  'stocks':data,
-                                  'users':users}])
-        return str(t)
-
-    def get_account_details(self, user):
-        """Get the details describing a user account"""
-        try:
-            transaction_ids = transactions_by_user_col.get(user)
-            transactions = [transactions_col.get(tid) for tid in transaction_ids]
-        except:
-            transactions = []
-
-        total = 0
-        spent = 0
-        for transaction in transactions:
-            # Get the current value, in pounds, of this transaction...
-            value = self.get_current_value(transaction)
-            transaction['value'] = value
-
-            # ... and the cost.
-            cost = Decimal(transaction['cost']) / 100
-            cost = cost.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-            transaction['cost'] = cost
-
-            # Update the total value and spend.
-            total = total + value
-            spent = spent + cost
-
-        if datetime.now() < deadline:
-            cash = 1000 - spent
-        else:
-            cash = 0
-
-        account = {'transactions':transactions, 'total':total, 'spent':spent, 'cash':cash}
-        return account
-
-    def get_current_value(self, transaction):
-        """Gets the current value of a transaction, as read from the database"""
-        stock = stocks_col.get(transaction['stock'])
-        cost = transaction['cost']
-        value = (cost * stock['price']) / transaction['price']
-        value = Decimal(str(value)) / 100
-        value = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-        return value
-
-    def get_leaderboard(self):
-        """Calculates the leaderboard"""
-        users = []
-        for member in members:
-            data = {'initials':member}
-            try:
-                tids = transactions_by_user_col.get(member)
-            except:
-                tids = {}
-
-            total = 0
-            for tid in tids:
-                transaction = transactions_col.get(tid)
-                total = total + self.get_current_value(transaction)
-            data['value'] = total
-            users.append(data)
-
-        sort_key = lambda data: data['value']
-        users = sorted(users, key=sort_key, reverse=True)
-        return users
+        return self.make_page('account.tmpl', account)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
     def purchase(self):
         """Page to purchase a stock"""
-        innerTemplate = Template(file=self.cwd + '/purchase.tmpl', searchList=[{'stocks':stocks}])
-        page = self.make_page(str(innerTemplate))
-        return page
+        return self.make_page('purchase.tmpl', {'stocks':stocks})
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -180,10 +105,8 @@ class PredictionsContest(Application):
         cherrypy.session['price'] = price
         cherrypy.session['cost'] = pennies
         cherrypy.session['offerExpires'] = datetime.utcnow() + timedelta(seconds=30)
-        innerTemplate = Template(file=self.cwd + '/confirm_purchase.tmpl',
-                                 searchList=[{'stock':stock, 'cost': pounds, 'price':price}])
-        page = self.make_page(str(innerTemplate))
-        return page
+
+        return self.make_page('confirm_purchase.tmpl', {'stock':stock, 'cost':pounds, 'price':price})
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -220,6 +143,77 @@ class PredictionsContest(Application):
             db_lock.release()
 
         raise cherrypy.HTTPRedirect('home')
+
+    def make_page(self, template='home.tmpl', details={}):
+        """Make a page: figure out the generic information required for the wrapper and then
+        use the provided template"""
+        data = [{'ticker':ticker, 'price':self.get_stock_price(ticker)} for ticker in stocks]
+        users = self.get_leaderboard()
+        base = {'tickers':data, 'users':users}
+        t = Template(file=self.cwd + '/' + template, searchList=[base, details])
+        return str(t)
+
+    def get_account_details(self, user):
+        """Get the details describing a user account"""
+        try:
+            transaction_ids = transactions_by_user_col.get(user)
+            transactions = [transactions_col.get(tid) for tid in transaction_ids]
+        except:
+            transactions = []
+
+        total = 0
+        spent = 0
+        for transaction in transactions:
+            # Get the current value, in pounds, of this transaction...
+            value = self.get_current_value(transaction)
+            transaction['value'] = value
+
+            # ... and the cost.
+            cost = Decimal(transaction['cost']) / 100
+            cost = cost.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+            transaction['cost'] = cost
+
+            # Update the total value and spend.
+            total = total + value
+            spent = spent + cost
+
+        if datetime.now() < deadline:
+            cash = 1000 - spent
+        else:
+            cash = 0
+
+        account = {'user':user, 'transactions':transactions, 'total':total, 'spent':spent, 'cash':cash}
+        return account
+
+    def get_current_value(self, transaction):
+        """Gets the current value of a transaction, as read from the database"""
+        stock = stocks_col.get(transaction['stock'])
+        cost = transaction['cost']
+        value = (cost * stock['price']) / transaction['price']
+        value = Decimal(str(value)) / 100
+        value = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+        return value
+
+    def get_leaderboard(self):
+        """Calculates the leaderboard"""
+        users = []
+        for member in members:
+            data = {'initials':member}
+            try:
+                tids = transactions_by_user_col.get(member)
+            except:
+                tids = {}
+
+            total = 0
+            for tid in tids:
+                transaction = transactions_col.get(tid)
+                total = total + self.get_current_value(transaction)
+            data['value'] = total
+            users.append(data)
+
+        sort_key = lambda data: data['value']
+        users = sorted(users, key=sort_key, reverse=True)
+        return users
 
     def is_purchase_allowed(self, user, stock, price, cost):
         """Decide whether a purchase is allowed"""

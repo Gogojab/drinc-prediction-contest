@@ -24,10 +24,10 @@
             </tr>
           </thead>
           <tbody>
-            #for $stock in $stocks
+            #for $ticker in $tickers
             <tr>
-              <td><a href="https://www.google.co.uk/finance?q=$stock.ticker">$stock.ticker</a></td>
-              <td>$stock.price</td>
+              <td><a href="https://www.google.co.uk/finance?q=$ticker.ticker">$ticker.ticker</a></td>
+              <td>$ticker.price</td>
             </tr>
             #end for
           </tbody>
