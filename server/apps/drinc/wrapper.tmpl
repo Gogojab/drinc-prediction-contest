@@ -59,6 +59,9 @@
       </div>
     </div>
     <script language="javascript" src="jquery.js"></script>
-    <script language="javascript" src="clickable-row.js"></script>
+    <script language="javascript">
+    ## Make rows clickable.
+    \$("tr").click(function() { window.location.href = \$(this).find("a").attr("href"); });
+    </script>
   </body>
 </html>
