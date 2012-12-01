@@ -58,24 +58,27 @@ class PredictionsContest(Application):
     def home(self):
         """Home page for the predictions contest"""
         user = cherrypy.request.login.split('@')[0].upper()
-        if datetime.now() > deadline:
-            raise cherrypy.HTTPRedirect("account?user=%s" % user)
-
         account = self.get_account_details(user)
         return self.make_page('home.tmpl', account)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def account(self, user):
+    def account(self, **kwargs):
         if datetime.now() < deadline:
             raise cherrypy.HTTPRedirect("home")
+
+        if 'user' in kwargs:
+            user = kwargs['user']
+        else:
+            user = cherrypy.request.login.split('@')[0].upper()
 
         if user not in members:
             raise cherrypy.HTTPRedirect("home")
 
-        account = self.get_account_details(user)
-        return self.make_page('account.tmpl', account)
+        dict = self.get_account_details(user)
+        dict['members'] = members
+        return self.make_page('account.tmpl', dict)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()

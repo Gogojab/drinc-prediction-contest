@@ -1,6 +1,7 @@
 #def navigationList
 <ul class="nav">
   <li class="active"><a href="home">Home</a></li>
+  <li><a href="account">Accounts</a></li>
   <li><a href="analysis">Analysis</a></li>
 </ul>
 #end def
@@ -8,6 +9,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script language="javascript" src="jquery.js"></script>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <link rel="stylesheet" href="bootstrap.css">
     <title>DRINC Prediction Contest</title>
@@ -65,7 +67,6 @@
         </div>
       </div>
     </div>
-    <script language="javascript" src="jquery.js"></script>
     <script language="javascript">
     ## Make rows clickable.
     \$("tr").click(function() { window.location.href = \$(this).find("a").attr("href"); });
