@@ -171,7 +171,7 @@ class PredictionsContest(Application):
         except:
             raise cherrypy.HTTPRedirect('home')
 
-        price = self.get_stock_price_from_google(stock)
+        price = self.update_stock_price(stock)
         if not price:
             raise cherrypy.HTTPRedirect('home')
 
