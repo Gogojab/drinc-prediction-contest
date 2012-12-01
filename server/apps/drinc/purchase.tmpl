@@ -2,7 +2,7 @@
   <form action="confirm_purchase" method="post">
     <p>Stock to buy:</p>
     <select name="stock">
-      #for $i, $stock in enumerate($stocks)
+      #for $stock in $stocks
       <option>$stock</option>
       #end for
     </select>

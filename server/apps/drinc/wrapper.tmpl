@@ -6,6 +6,14 @@
     <title>DRINC Prediction Contest</title>
   </head>
   <body>
+    <div id="heading" class="navbar">
+      <div class="navbar-inner">
+        <a class="brand" href="#">DRINC Prediction Contest</a>
+         <ul class="nav">
+           <li class="active"><a href="home">Home</a></li>
+         </ul>
+      </div>
+    </div>
     <div class="row-fluid">
       <div id="stocks" class="span2">
         <table class="table table-condensed table-striped table-hover">
@@ -16,7 +24,7 @@
             </tr>
           </thead>
           <tbody>
-            #for $i, $stock in enumerate($stocks)
+            #for $stock in $stocks
             <tr>
               <td><a href="https://www.google.co.uk/finance?q=$stock.ticker">$stock.ticker</a></td>
               <td>$stock.price</td>
@@ -26,11 +34,6 @@
         </table>
       </div>
       <div class="span10">
-        <div class="row-fluid">
-          <div id="heading" class="span10">
-            <h1>DRINC Prediction Contest</h1>
-          </div>
-        </div>
         <div class="row-fluid">
           $inner
           <div id="standings" class="span3">
@@ -43,7 +46,7 @@
                 </tr>
               </thead>
               <tbody>
-                #for $i, $user in enumerate($users)
+                #for $user in $users
                 <tr>
                   <td><a href="account?user=$user.initials">$user.initials</a></td>
                   <td>$user.value</td>
