@@ -33,12 +33,16 @@
       </tr>
     </tfoot>
   </table>
+#if $cash > 0
   <h3>Balance</h3>
-  <p>You have &pound;$cash cash.</p>
-  #if $cash > 0 and len($transactions) < 3
-  <h3>Buy</h3>
-  <p>Click <strong><a href=purchase>here</a></strong> to buy.  Unspent money isn't worth anything!</p>
-  <p>Don't forget that you can't make more than three purchases.</p>
-  #end if
+#set $used = len($transactions)
+#if $used < 3
+  <p>You have &pound;$cash cash, and have used $used of your 3 purchases.</p>
+  <p>Click <strong><a href=purchase>here</a></strong> to buy.  Don't forget: unspent money isn't worth anything!</p>
+#else
+  <p>You have &pound;$cash cash, and have used all of your 3 purchases.</p>
+  <p>That cash now can't be spent, and won't be counted.</p>
+#end if
+#end if
 </div>
 #end def

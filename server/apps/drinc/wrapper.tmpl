@@ -1,8 +1,10 @@
 #def navigationList
 <ul class="nav">
   <li class="active"><a href="home">Home</a></li>
+#if $past_deadline
   <li><a href="account">Accounts</a></li>
   <li><a href="analysis">Analysis</a></li>
+#end if
 </ul>
 #end def
 
@@ -10,6 +12,7 @@
 <html>
   <head>
     <script language="javascript" src="jquery.js"></script>
+    <script language="javascript" src="bootstrap.js"></script>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <link rel="stylesheet" href="bootstrap.css">
     <title>DRINC Prediction Contest</title>
@@ -35,7 +38,11 @@
           <tbody>
             #for $ticker in $tickers
             <tr>
-              <td><a href="https://www.google.co.uk/finance?q=$ticker.ticker">$ticker.ticker</a></td>
+              <td>
+                <a href="https://www.google.co.uk/finance?q=$ticker.ticker" rel="tooltip" data-placement="right" title="$ticker.full_name">
+                  $ticker.ticker
+                </a>
+              </td>
               <td>$ticker.price</td>
             </tr>
             #end for
@@ -57,7 +64,11 @@
               <tbody>
                 #for $user in $users
                 <tr>
+#if $past_deadline
                   <td><a href="account?user=$user.initials">$user.initials</a></td>
+#else
+                  <td>$user.initials</td>
+#end if
                   <td>$user.value</td>
                 </tr>
                 #end for
@@ -69,7 +80,13 @@
     </div>
     <script language="javascript">
     ## Make rows clickable.
-    \$("tr").click(function() { window.location.href = \$(this).find("a").attr("href"); });
+    \$('#stocks tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
+#if $past_deadline
+    \$('#standings tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
+#end if
+
+    ## Enable tooltips on the stocks list.
+    \$('#stocks a').tooltip()
     </script>
   </body>
 </html>

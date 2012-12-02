@@ -18,9 +18,25 @@ locale.setlocale(locale.LC_NUMERIC, '')
 
 application_class_name = 'PredictionsContest'
 members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
-stocks = ['LON:BYG', 'LON:CINE', 'LON:CMX', 'LON:DLAR', 'LON:EMG', 'LON:FSTA', 'LON:GAW',
-          'LON:GRG', 'LON:HIK', 'LON:LLOY', 'LON:MRO', 'LON:NETD', 'LON:NXR', 'LON:OMG',
-          'LON:PSN', 'LON:SHP', 'LON:SLN', 'LON:TSCO', 'LON:ZZZ']
+stocks = {'LON:BYG' : 'Big Yellow Group',
+          'LON:CINE': 'Cineworld Group',
+          'LON:CMX' : 'Catalyst Media Group',
+          'LON:DLAR': 'De La Rue',
+          'LON:EMG' : 'Man Group',
+          'LON:FSTA': 'Fuller, Smith and Turner',
+          'LON:GAW' : 'Games Workshop Group',
+          'LON:GRG' : 'Greggs',
+          'LON:HIK' : 'Hikma Pharmaceuticals',
+          'LON:LLOY': 'Lloyds Banking Group',
+          'LON:MRO' : 'Melrose',
+          'LON:NETD': 'Net Dimensions (Holdings) Limited',
+          'LON:NXR' : 'Norcros',
+          'LON:OMG' : 'OMG',
+          'LON:PSN' : 'Persimmon',
+          'LON:SHP' : 'Shire',
+          'LON:SLN' : 'Silence Therapeutics',
+          'LON:TSCO': 'Tesco',
+          'LON:ZZZ' : 'Snoozebox Holdings'}
 deadline = datetime(2012, 11, 26, 18)
 
 # Database access.
@@ -85,7 +101,8 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def purchase(self):
         """Page to purchase a stock"""
-        return self.make_page('purchase.tmpl', {'stocks':stocks})
+        tickers = sorted(stocks.keys())
+        return self.make_page('purchase.tmpl', {'stocks':tickers})
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -153,14 +170,12 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def analysis(self):
         """Analysis page"""
-        user = cherrypy.request.login.split('@')[0].upper()
         if datetime.now() < deadline:
             raise cherrypy.HTTPRedirect('home')
 
         spent = self.get_all_stock_expenditure()
         format = lambda k, v: "{ name: '%s', y: %d }" % (k,v)
-        getKey = lambda (k,v): v
-        json = [format(k,v) for (k,v) in sorted(spent.iteritems(), key=getKey)]
+        json = [format(k,v) for (k,v) in sorted(spent.iteritems(), key=lambda (k,v): v)]
         expenditure = "[" + ",".join(json) + "]"
         return self.make_page('analysis.tmpl', {'expenditure':expenditure})
 
@@ -186,9 +201,12 @@ class PredictionsContest(Application):
     def make_page(self, template='home.tmpl', details={}):
         """Make a page: figure out the generic information required for the wrapper and then
         use the provided template"""
-        data = [{'ticker':ticker, 'price':self.get_stock_price(ticker)} for ticker in stocks]
+        make_data = lambda x: {'ticker': x, 'price': self.get_stock_price(x), 'full_name': stocks[x]}
+        data = [make_data(stock) for stock in stocks]
+        data = sorted(data, key=lambda x: x['ticker'])
         users = self.get_leaderboard()
-        base = {'tickers':data, 'users':users}
+        past_deadline = datetime.now() > deadline
+        base = {'tickers':data, 'users':users, 'past_deadline':past_deadline}
         t = Template(file=self.cwd + '/' + template, searchList=[base, details])
         return str(t)
 
