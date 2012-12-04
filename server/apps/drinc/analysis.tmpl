@@ -15,38 +15,42 @@
   <div id="chart" style="min-width: 400px; height: 400px">
   </div>
 </div>
+#end def
+
+#def extra_script_source
 <script type="text/javascript" src="highcharts.js"></script>
-<script type="text/javascript">
-  var chart;
-  \$(document).ready(function() {
-    chart = new Highcharts.Chart({
-      chart: {
-        renderTo: 'chart',
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        style: '"Helvetica Neue",Helvetica,Arial,sans-serif'
+#end def
+
+#def extra_script
+var chart;
+\$(document).ready(function() {
+  chart = new Highcharts.Chart({
+    chart: {
+      renderTo: 'chart',
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      style: '"Helvetica Neue",Helvetica,Arial,sans-serif'
+    },
+    title: { text: null },
+    credits: { enabled: false },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: 'pointer'
+      }
+    },
+    tooltip: {
+      formatter: function() {
+        format = this.point.name + " \xa3" + this.point.y / 100;
+        return format;
       },
-      title: { text: null },
-      credits: { enabled: false },
-      plotOptions: {
-        pie: {
-          allowPointSelect: true,
-          cursor: 'pointer'
-        }
-      },
-      tooltip: {
-        formatter: function() {
-          format = this.point.name + " \xa3" + this.point.y / 100;
-          return format;
-        },
-      },
-      series: [{
-        type: 'pie',
-        name: 'Total cash spent',
-        data: $expenditure
-      }]
-    });
+    },
+    series: [{
+      type: 'pie',
+      name: 'Total cash spent',
+      data: $expenditure
+    }]
   });
-</script>
+});
 #end def

@@ -8,11 +8,15 @@
 </ul>
 #end def
 
+#def extra_script_source
+#end def
+
+#def extra_script
+#end def
+
 <!DOCTYPE html>
 <html>
   <head>
-    <script language="javascript" src="jquery.js"></script>
-    <script language="javascript" src="bootstrap.js"></script>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <link rel="stylesheet" href="bootstrap.css">
     <title>DRINC Prediction Contest</title>
@@ -78,7 +82,12 @@
         </div>
       </div>
     </div>
-    <script language="javascript">
+
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="bootstrap.js"></script>
+    $extra_script_source
+
+    <script type="text/javascript">
     ## Make rows clickable.
     \$('#stocks tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
 #if $past_deadline
@@ -87,6 +96,9 @@
 
     ## Enable tooltips on the stocks list.
     \$('#stocks a').tooltip()
+
+    ## Page-specific script.
+    $extra_script
     </script>
   </body>
 </html>
