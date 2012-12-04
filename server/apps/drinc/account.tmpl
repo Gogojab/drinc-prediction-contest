@@ -46,18 +46,16 @@
     <select name="user" class="input-small">
       #for $member in $members
       #if $member == $user
-        <option selected="selected" OnChange="document.form_genlist.submit()">$member</option>
+        <option selected="selected">$member</option>
       #else
-        <option OnChange="document.form_genlist.submit()">$member</option>
+        <option>$member</option>
       #end if
       #end for
     </select>
     's account
-    <script language="javascript">
-      \$("select").change(
-        function(){ \$(this).closest("form").submit(); }
-      )
-    </script>
   </form>
 </div>
+<script language="javascript">
+\$("select").change(function() { \$(this).closest("form").submit(); })
+</script>
 #end def
