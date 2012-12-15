@@ -12,7 +12,10 @@
 #def inner
 <div id="analysis" class="span7">
   <h3>Where the money went</h3>
-  <div id="chart" style="min-width: 400px; height: 400px">
+  <div id="expenditure" style="min-width: 400px; height: 400px">
+  </div>
+  <h3>How the race unfolded</h3>
+  <div id="race" style="min-width: 400px; height: 400px">
   </div>
 </div>
 #end def
@@ -22,11 +25,11 @@
 #end def
 
 #def extra_script
-var chart;
 \$(document).ready(function() {
-  chart = new Highcharts.Chart({
+  ## Pie chart showing where the money was spent.
+  new Highcharts.Chart({
     chart: {
-      renderTo: 'chart',
+      renderTo: 'expenditure',
       plotBackgroundColor: null,
       plotBorderWidth: null,
       plotShadow: false,
@@ -42,8 +45,7 @@ var chart;
     },
     tooltip: {
       formatter: function() {
-        format = this.point.name + " \xa3" + this.point.y / 100;
-        return format;
+        return this.point.name + " \xa3" + this.point.y / 100;
       },
     },
     series: [{
@@ -51,6 +53,36 @@ var chart;
       name: 'Total cash spent',
       data: $expenditure
     }]
+  });
+
+  ## Graph showing how the race unfolded.
+  new Highcharts.Chart({
+    chart: {
+      renderTo: 'race',
+      zoomType: 'xy',
+      spacingRight: 20
+    },
+    title: { text: null },
+    credits: { enabled: false },
+    xAxis: { type: 'datetime' },
+    yAxis: {
+      labels: {
+        formatter: function() {
+          return "\xa3" + this.value / 100;
+        }
+      },
+      title: { text: null }
+    },
+    tooltip: {
+      formatter: function() {
+        var date = new Date(this.x);
+        format = "<span style=\"font-size: 10px\">" + date.toLocaleDateString() + "</span><br />" +
+        "<span style=\"color: " + this.series.color + "\">" + this.series.name + ": </span>" +
+        "<b>\xa3" + this.y / 100 + "</b>";
+        return format;
+      }
+    },
+    series: $race
   });
 });
 #end def

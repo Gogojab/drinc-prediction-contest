@@ -89,9 +89,9 @@
 
     <script type="text/javascript">
     ## Make rows clickable.
-    \$('#stocks tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
+    \$('#stocks tbody tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
 #if $past_deadline
-    \$('#standings tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
+    \$('#standings tbody tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
 #end if
 
     ## Enable tooltips on the stocks list.

@@ -3,7 +3,7 @@ from classes.application import Application
 from apscheduler.scheduler import Scheduler
 from Cheetah.Template import Template
 from decimal import Decimal, ROUND_DOWN
-from datetime import datetime, timedelta
+import datetime
 import csv
 import pycassa
 import simplejson as json
@@ -37,14 +37,16 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TSCO': 'Tesco',
           'LON:ZZZ' : 'Snoozebox Holdings'}
-deadline = datetime(2012, 11, 26, 18)
+start_date = datetime.datetime(2012, 11, 20)
+deadline = datetime.datetime(2012, 11, 26, 18)
 
 # Database access.
 db_lock = threading.Lock()
-pool = pycassa.ConnectionPool('PredictionContest')
+pool = pycassa.ConnectionPool('PredictionContest', server_list=['flash:9160'])
 transactions_by_user_col = pycassa.ColumnFamily(pool, 'TransactionsByUser')
 transactions_by_stock_col = pycassa.ColumnFamily(pool, 'TransactionsByStock')
 transactions_col = pycassa.ColumnFamily(pool, 'Transactions')
+user_history_col = pycassa.ColumnFamily(pool, 'UserHist')
 stock_history_col = pycassa.ColumnFamily(pool, 'StockHist')
 stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
 
@@ -66,6 +68,7 @@ class PredictionsContest(Application):
     def setup(self):
         self.sched.start()
         self.sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
+        self.sched.add_cron_job(self.update_user_histories, day_of_week='0-4', hour=18)
         self.sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
 
     @cherrypy.expose
@@ -81,7 +84,7 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
     def account(self, **kwargs):
-        if datetime.now() < deadline:
+        if datetime.datetime.now() < deadline:
             raise cherrypy.HTTPRedirect("home")
 
         if 'user' in kwargs:
@@ -125,7 +128,7 @@ class PredictionsContest(Application):
         cherrypy.session['stock'] = stock
         cherrypy.session['price'] = price
         cherrypy.session['cost'] = pennies
-        cherrypy.session['offerExpires'] = datetime.utcnow() + timedelta(seconds=30)
+        cherrypy.session['offerExpires'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
 
         return self.make_page('confirm_purchase.tmpl', {'stock':stock, 'cost':pounds, 'price':price})
 
@@ -137,7 +140,7 @@ class PredictionsContest(Application):
         if cancel:
             raise cherrypy.HTTPRedirect('home')
 
-        if datetime.now() > deadline:
+        if datetime.datetime.now() > deadline:
             raise cherrypy.HTTPRedirect('home')
 
         # Retrieve, and then expire, session data containing details of purchase.
@@ -150,7 +153,7 @@ class PredictionsContest(Application):
             cherrypy.lib.sessions.expire()
 
         # Check that the offer hasn't expired.
-        if datetime.utcnow() > offerExpires:
+        if datetime.datetime.utcnow() > offerExpires:
             raise cherrypy.HTTPRedirect('home')
 
         # If the purchase is allowed, make it.
@@ -170,22 +173,31 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def analysis(self):
         """Analysis page"""
-        if datetime.now() < deadline:
+        if datetime.datetime.now() < deadline:
             raise cherrypy.HTTPRedirect('home')
 
+        # Figure out where the money went.
         spent = self.get_all_stock_expenditure()
-        format = lambda k, v: "{ name: '%s', y: %d }" % (k,v)
-        json = [format(k,v) for (k,v) in sorted(spent.iteritems(), key=lambda (k,v): v)]
-        expenditure = "[" + ",".join(json) + "]"
-        return self.make_page('analysis.tmpl', {'expenditure':expenditure})
+        expenditure = json.dumps(spent)
+
+        # Figure out how the race unfolded.
+        series=[]
+        for member in members:
+            line = {}
+            line['type'] = 'line'
+            line['name'] = member
+            line['data'] = self.get_user_history(member)
+            series.append(line)
+        race = json.dumps(series)
+        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
     def get_all_stock_expenditure(self):
         """Figure out how much was spent on each stock"""
-        expenditure = {}
+        expenditure = []
         for ticker in stocks:
             spent = self.get_stock_expenditure(ticker)
             if spent != 0:
-                expenditure[ticker] = spent
+                expenditure.append({'name':ticker, 'y':spent})
         return expenditure
 
     def get_stock_expenditure(self, ticker):
@@ -205,24 +217,30 @@ class PredictionsContest(Application):
         data = [make_data(stock) for stock in stocks]
         data = sorted(data, key=lambda x: x['ticker'])
         users = self.get_leaderboard()
-        past_deadline = datetime.now() > deadline
+        past_deadline = datetime.datetime.now() > deadline
         base = {'tickers':data, 'users':users, 'past_deadline':past_deadline}
         t = Template(file=self.cwd + '/' + template, searchList=[base, details])
         return str(t)
 
-    def get_account_details(self, user):
-        """Get the details describing a user account"""
+    def get_user_transactions(self, user):
+        """Get the transactions associated with a user"""
         try:
             transaction_ids = transactions_by_user_col.get(user)
             transactions = [transactions_col.get(tid) for tid in transaction_ids]
         except:
             transactions = []
+        return transactions
+
+    def get_account_details(self, user):
+        """Get the details describing a user account"""
+        transactions = self.get_user_transactions(user)
 
         total = 0
         spent = 0
         for transaction in transactions:
             # Get the current value, in pounds, of this transaction...
             value = self.get_current_value(transaction)
+            value = self.pennies_to_pounds(value)
             transaction['value'] = value
 
             # ... and the cost.
@@ -234,7 +252,7 @@ class PredictionsContest(Application):
             total = total + value
             spent = spent + cost
 
-        if datetime.now() < deadline:
+        if datetime.datetime.now() < deadline:
             cash = 1000 - spent
         else:
             cash = 0
@@ -243,29 +261,47 @@ class PredictionsContest(Application):
         return account
 
     def get_current_value(self, transaction):
-        """Gets the current value of a transaction, as read from the database"""
+        """Gets the current value of a transaction, in pennies"""
         stock = stocks_col.get(transaction['stock'])
         cost = transaction['cost']
         value = (cost * stock['price']) / transaction['price']
-        value = Decimal(str(value)) / 100
-        value = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-        return value
+        return int(value)
+
+    def get_value_at(self, transaction, date):
+        """Gets the value of a transaction on a particular date, in pennies"""
+        cost = transaction['cost']
+        stock = transaction['stock']
+        purchase_price = transaction['price']
+        try:
+            history = stock_history_col.get(stock, column_start=date, column_count=1, column_reversed=True)
+            for (date, price) in history.items():
+                value = (cost * price) / purchase_price
+        except:
+            value = 0
+
+        return int(value)
+
+    def get_user_value(self, member):
+        """Get a user's current value, in pennies"""
+        try:
+            tids = transactions_by_user_col.get(member)
+        except:
+            tids = {}
+
+        total = 0
+        for tid in tids:
+            transaction = transactions_col.get(tid)
+            total = total + self.get_current_value(transaction)
+
+        return total
 
     def get_leaderboard(self):
         """Calculates the leaderboard"""
         users = []
         for member in members:
             data = {'initials':member}
-            try:
-                tids = transactions_by_user_col.get(member)
-            except:
-                tids = {}
-
-            total = 0
-            for tid in tids:
-                transaction = transactions_col.get(tid)
-                total = total + self.get_current_value(transaction)
-            data['value'] = total
+            worth = self.get_user_value(member)
+            data['value'] = self.pennies_to_pounds(worth)
             users.append(data)
 
         sort_key = lambda data: data['value']
@@ -311,7 +347,7 @@ class PredictionsContest(Application):
         """Updates the database with a record of a purchase."""
         transaction = {'user':user,
                        'stock':stock,
-                       'date':datetime.utcnow(),
+                       'date':datetime.datetime.utcnow(),
                        'price':price,
                        'cost':cost}
         transaction_id = uuid.uuid4()
@@ -319,6 +355,22 @@ class PredictionsContest(Application):
         transactions_col.insert(transaction_id, transaction)
         transactions_by_user_col.insert(user, {transaction_id:stock})
         transactions_by_stock_col.insert(stock, {transaction_id:cost})
+
+    def pennies_to_pounds(self, pennies):
+        """Utility function for converting pennies to pounds"""
+        pounds = Decimal(str(pennies)) / 100
+        pounds = pounds.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+        return pounds
+
+    def get_user_history(self, user):
+        """Get the historical value of a user's portfolio"""
+        values=[]
+        data = user_history_col.get(user)
+        for (date,value) in data.iteritems():
+            if value > 0:
+                utc = time.mktime(date.timetuple())
+                values.append([1000 * utc, value])
+        return values
 
     def get_stock_history_from_google(self, ticker):
         """Goes to the internet, and returns a dictionary in which the keys are dates,
@@ -333,7 +385,7 @@ class PredictionsContest(Application):
         for row in reader:
             (date, closing) = (row[0], row[4])
             struct = time.strptime(date, '%d-%b-%y')
-            dt = datetime(*struct[:6])
+            dt = datetime.datetime(*struct[:6])
             price = float(closing)
             dict[dt] = price
 
@@ -374,6 +426,14 @@ class PredictionsContest(Application):
         for stock in stocks:
             dict = self.get_stock_history_from_google(stock)
             stock_history_col.insert(stock, dict)
+
+    def update_user_histories(self):
+        """Update the UserHist column family"""
+        today = datetime.date.today()
+        timestamp = datetime.datetime.combine(today, datetime.time())
+        for member in members:
+            worth = self.get_user_value(member)
+            user_history_col.insert(member, {timestamp: worth})
 
     def update_stock_prices(self):
         """Update the Stocks column family with all the latest prices"""
