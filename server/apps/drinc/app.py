@@ -37,7 +37,6 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TSCO': 'Tesco',
           'LON:ZZZ' : 'Snoozebox Holdings'}
-start_date = datetime.datetime(2012, 11, 20)
 deadline = datetime.datetime(2012, 11, 26, 18)
 
 # Database access.
@@ -272,16 +271,19 @@ class PredictionsContest(Application):
         cost = transaction['cost']
         stock = transaction['stock']
         purchase_price = transaction['price']
-        try:
-            history = stock_history_col.get(stock, column_start=date, column_count=1, column_reversed=True)
-            for (date, price) in history.items():
-                value = (cost * price) / purchase_price
-        except:
+        if transaction['date'] < date:
+            try:
+                history = stock_history_col.get(stock, column_start=date, column_count=1, column_reversed=True)
+                for (date, price) in history.items():
+                    value = (cost * price) / purchase_price
+            except:
+                value = 0
+        else:
             value = 0
 
         return int(value)
 
-    def get_user_value(self, member):
+    def get_current_user_value(self, member):
         """Get a user's current value, in pennies"""
         try:
             tids = transactions_by_user_col.get(member)
@@ -295,12 +297,26 @@ class PredictionsContest(Application):
 
         return total
 
+    def get_user_value_at(self, member, date):
+        """Get a user's current value on a particular date, in pennies"""
+        try:
+            tids = transactions_by_user_col.get(member)
+        except:
+            tids = {}
+
+        total = 0
+        for tid in tids:
+            transaction = transactions_col.get(tid)
+            total = total + self.get_value_at(transaction, date)
+
+        return total
+
     def get_leaderboard(self):
         """Calculates the leaderboard"""
         users = []
         for member in members:
             data = {'initials':member}
-            worth = self.get_user_value(member)
+            worth = self.get_current_user_value(member)
             data['value'] = self.pennies_to_pounds(worth)
             users.append(data)
 
@@ -432,7 +448,7 @@ class PredictionsContest(Application):
         today = datetime.date.today()
         timestamp = datetime.datetime.combine(today, datetime.time())
         for member in members:
-            worth = self.get_user_value(member)
+            worth = self.get_current_user_value(member)
             user_history_col.insert(member, {timestamp: worth})
 
     def update_stock_prices(self):
