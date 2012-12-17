@@ -387,6 +387,14 @@ class PredictionsContest(Application):
             if value > 0:
                 utc = time.mktime(date.timetuple())
                 values.append([1000 * utc, value])
+
+        utcnow = datetime.datetime.utcnow()
+        if utcnow.date() > date.date():
+            value = self.get_current_user_value(user)
+            if value > 0:
+                utc = time.mktime(utcnow.timetuple())
+                values.append([1000 * utc, value])
+
         return values
 
     def get_stock_history_from_google(self, ticker):
