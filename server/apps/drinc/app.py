@@ -37,6 +37,7 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TSCO': 'Tesco',
           'LON:ZZZ' : 'Snoozebox Holdings'}
+start_date = datetime.datetime(2012, 11, 19, 18)
 deadline = datetime.datetime(2012, 11, 26, 18)
 
 # Database access.
@@ -381,7 +382,7 @@ class PredictionsContest(Application):
     def get_user_history(self, user):
         """Get the historical value of a user's portfolio"""
         values=[]
-        data = user_history_col.get(user)
+        data = user_history_col.get(user, column_start=start_date)
         for (date,value) in data.iteritems():
             if value > 0:
                 utc = time.mktime(date.timetuple())
