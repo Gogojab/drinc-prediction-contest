@@ -198,7 +198,8 @@ class PredictionsContest(Application):
             spent = self.get_stock_expenditure(ticker)
             if spent != 0:
                 expenditure.append({'name':ticker, 'y':spent})
-        return expenditure
+
+        return sorted(expenditure, key=lambda val: val['y'], reverse=True)
 
     def get_stock_expenditure(self, ticker):
         """Figure out how much was spent on a given stock"""
