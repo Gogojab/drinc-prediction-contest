@@ -36,9 +36,10 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:SHP' : 'Shire',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TSCO': 'Tesco',
+          'LON:ULE' : 'Ultra Electronics Holdings',
           'LON:ZZZ' : 'Snoozebox Holdings'}
-start_date = datetime.datetime(2012, 11, 19, 18)
-deadline = datetime.datetime(2012, 11, 26, 18)
+start_date = datetime.datetime(2012, 12, 18, 18)
+deadline = datetime.datetime(2012, 12, 24, 18)
 
 # Database access.
 db_lock = threading.Lock()
