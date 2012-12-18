@@ -182,13 +182,9 @@ class PredictionsContest(Application):
         expenditure = json.dumps(spent)
 
         # Figure out how the race unfolded.
-        series=[]
-        for member in members:
-            line = {}
-            line['type'] = 'line'
-            line['name'] = member
-            line['data'] = self.get_user_history(member)
-            series.append(line)
+        series = [{'type':'line',
+                   'name':member,
+                   'data':self.get_user_history(member)} for member in members]
         race = json.dumps(series)
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
