@@ -58,7 +58,12 @@
           $inner
           <div id="standings" class="span3">
             <h2>Standings</h2>
-            <table class="table table-condensed table-striped table-hover">
+#if $past_deadline
+#set hover = 'table-hover'
+#else
+#set hover = ''
+#end if
+            <table class="table table-condensed table-striped $hover">
               <thead>
                 <tr>
                   <th>Member</th>
