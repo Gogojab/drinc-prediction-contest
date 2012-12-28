@@ -64,6 +64,7 @@ class PredictionsContest(Application):
         self.add_page('/purchase', self.purchase)
         self.add_page('/submit_purchase', self.submit_purchase)
         self.add_page('/confirm_purchase', self.confirm_purchase)
+        self.add_page('/update_stocks', self.update_stocks)
 
     def setup(self):
         self.sched.start()
@@ -79,6 +80,17 @@ class PredictionsContest(Application):
         user = cherrypy.request.login.split('@')[0].upper()
         account = self.get_account_details(user)
         return self.make_page('home.tmpl', account)
+
+    @cherrypy.expose
+    @cherrypy.tools.auth_kerberos()
+    @cherrypy.tools.auth_members(users=members)
+    def update_stocks(self):
+        """Server Sent Events updating the stock prices"""
+        cherrypy.response.headers["Content-Type"] = "text/event-stream"
+        data = self.get_stock_data(full=False)
+        message = 'data: ' + json.dumps(data) + '\nretry: 600000\n\n'
+        return message
+    update_stocks._cp_config = {'response.stream': True}
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -210,14 +222,21 @@ class PredictionsContest(Application):
     def make_page(self, template='home.tmpl', details={}):
         """Make a page: figure out the generic information required for the wrapper and then
         use the provided template"""
-        make_data = lambda x: {'ticker': x, 'price': self.get_stock_price(x), 'full_name': stocks[x]}
-        data = [make_data(stock) for stock in stocks]
-        data = sorted(data, key=lambda x: x['ticker'])
+        data = self.get_stock_data()
         users = self.get_leaderboard()
         past_deadline = datetime.datetime.now() > deadline
         base = {'tickers':data, 'users':users, 'past_deadline':past_deadline}
         t = Template(file=self.cwd + '/' + template, searchList=[base, details])
         return str(t)
+
+    def get_stock_data(self, full=True):
+        """Get the latest stock prices"""
+        if full:
+            make_data = lambda x: {'ticker': x, 'price': self.get_stock_price(x), 'full_name': stocks[x]}
+        else:
+            make_data = lambda x: {'ticker': x, 'price': self.get_stock_price(x)}
+        data = [make_data(stock) for stock in stocks]
+        return sorted(data, key=lambda x: x['ticker'])
 
     def get_user_transactions(self, user):
         """Get the transactions associated with a user"""

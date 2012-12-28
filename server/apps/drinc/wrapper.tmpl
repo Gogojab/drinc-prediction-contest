@@ -41,7 +41,7 @@
           </thead>
           <tbody>
             #for $ticker in $tickers
-            <tr>
+            <tr id="stocks-$ticker.ticker">
               <td>
                 <a href="https://www.google.co.uk/finance?q=$ticker.ticker" rel="tooltip" data-placement="right" title="$ticker.full_name">
                   $ticker.ticker
@@ -100,7 +100,18 @@
 #end if
 
     ## Enable tooltips on the stocks list.
-    \$('#stocks a').tooltip()
+    \$('#stocks a').tooltip();
+
+    if (typeof(EventSource) !== "undefined") {
+      var stocks = new EventSource("update_stocks");
+      stocks.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        for (var i = 0; i < data.length; i++) {
+          var stock = data[i]
+          \$('[id="stocks-'+stock.ticker+'"] td:last').text(stock.price);
+        }
+      };
+    }
 
     ## Page-specific script.
     $extra_script
