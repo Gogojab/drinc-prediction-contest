@@ -64,7 +64,7 @@ class PredictionsContest(Application):
         self.add_page('/purchase', self.purchase)
         self.add_page('/submit_purchase', self.submit_purchase)
         self.add_page('/confirm_purchase', self.confirm_purchase)
-        self.add_page('/update_stocks', self.update_stocks)
+        self.add_page('/update_wrapper', self.update_wrapper)
 
     def setup(self):
         self.sched.start()
@@ -84,13 +84,15 @@ class PredictionsContest(Application):
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def update_stocks(self):
-        """Server Sent Events updating the stock prices"""
+    def update_wrapper(self):
+        """Server Sent Events updating the stock prices and standings"""
         cherrypy.response.headers["Content-Type"] = "text/event-stream"
-        data = self.get_stock_data(full=False)
-        message = 'data: ' + json.dumps(data) + '\nretry: 600000\n\n'
+        stocks = self.get_stock_data(full=False)
+        users = self.get_leaderboard()
+        data = {'stocks':stocks, 'users':users}
+        message = 'data: ' + json.dumps(data, cls=DecimalEncoder) + '\nretry: 600000\n\n'
         return message
-    update_stocks._cp_config = {'response.stream': True}
+    update_wrapper._cp_config = {'response.stream': True}
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -487,3 +489,9 @@ class PredictionsContest(Application):
         if price:
             stocks_col.insert(ticker, {'price':price})
         return price
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)

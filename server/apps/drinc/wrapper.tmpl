@@ -63,7 +63,7 @@
 #else
 #set hover = ''
 #end if
-            <table class="table table-condensed table-striped $hover">
+            <table id="standings-table" class="table table-condensed table-striped $hover">
               <thead>
                 <tr>
                   <th>Member</th>
@@ -103,13 +103,28 @@
     \$('#stocks a').tooltip();
 
     if (typeof(EventSource) !== "undefined") {
-      var stocks = new EventSource("update_stocks");
-      stocks.onmessage = function(e) {
+      var updates = new EventSource("update_wrapper");
+      updates.onmessage = function(e) {
         var data = JSON.parse(e.data);
-        for (var i = 0; i < data.length; i++) {
-          var stock = data[i]
+
+        for (var i = 0; i < data.stocks.length; i++) {
+          var stock = data.stocks[i]
           \$('[id="stocks-'+stock.ticker+'"] td:last').text(stock.price);
         }
+
+        var rows=''
+        for (var i = 0; i < data.users.length; i++) {
+          var user = data.users[i]
+          rows += '<tr>'
+#if $past_deadline
+          rows += '<td><a href="account?user='+user.initials+'">'+user.initials+'</a></td>'
+#else
+          rows += '<td>'+'user.initials+'</td>'
+#end if
+          rows += '<td>'+user.value+'</td>'
+          rows += '</tr>'
+        }
+        \$("#standings-table tbody").html(rows)
       };
     }
 
