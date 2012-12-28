@@ -92,7 +92,7 @@ class PredictionsContest(Application):
         data = {'stocks':stocks, 'users':users}
         message = 'data: ' + json.dumps(data, cls=DecimalEncoder) + '\nretry: 600000\n\n'
         return message
-    update_wrapper._cp_config = {'response.stream': True}
+    update_wrapper._cp_config = {'response.stream': True, 'tools.encode.on':True, 'tools.encode.encoding':'utf-8'}
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
