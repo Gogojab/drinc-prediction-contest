@@ -12,10 +12,7 @@ import threading
 import time
 import urllib2
 import uuid
-import locale
 import sys
-
-locale.setlocale(locale.LC_NUMERIC, '')
 
 application_class_name = 'PredictionsContest'
 members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
@@ -276,8 +273,7 @@ class PredictionsContest(Application):
             transaction['value'] = value
 
             # ... and the cost.
-            cost = Decimal(transaction['cost']) / 100
-            cost = cost.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+            cost = self.pennies_to_pounds(transaction['cost'])
             transaction['cost'] = cost
 
             # Update the total value and spend.
@@ -407,8 +403,8 @@ class PredictionsContest(Application):
 
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
-        pounds = Decimal(str(pennies)) / 100
-        pounds = pounds.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+        pounds = Decimal(pennies) / 100
+        pounds = pounds.quantize(Decimal('.01'))
         return pounds
 
     def get_user_history(self, user):
@@ -472,8 +468,8 @@ class PredictionsContest(Application):
         try:
             lines = urllib2.urlopen(url).read().splitlines()
             quote = json.loads(''.join([x for x in lines if x not in ('// [', ']')]))
-            price = quote['l_cur']
-            price = locale.atof(price[3:])
+            price = quote['l_cur'].replace(',','')
+            price = Decimal(price[3:])
         except:
             price = None
 

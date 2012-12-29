@@ -11,7 +11,7 @@ create column family Transactions
   and column_metadata=[{column_name: user, validation_class: UTF8Type},
                        {column_name: stock, validation_class: UTF8Type},
                        {column_name: date, validation_class: DateType},
-                       {column_name: price, validation_class: DoubleType},
+                       {column_name: price, validation_class: DecimalType},
                        {column_name: cost, validation_class: LongType}]
   and default_validation_class = 'UTF8Type'
   and key_validation_class = 'LexicalUUIDType'
@@ -67,7 +67,7 @@ create column family TransactionsByStock
 create column family StockHist
   with column_type = 'Standard'
   and comparator = 'DateType'
-  and default_validation_class = 'DoubleType'
+  and default_validation_class = 'DecimalType'
   and key_validation_class = 'UTF8Type'
   and rows_cached = 0.0
   and row_cache_save_period = 0
@@ -103,7 +103,7 @@ create column family UserHist
 create column family Stocks
   with column_type = 'Standard'
   and comparator = 'UTF8Type'
-  and default_validation_class = 'DoubleType'
+  and default_validation_class = 'DecimalType'
   and key_validation_class = 'UTF8Type'
   and rows_cached = 0.0
   and row_cache_save_period = 0
