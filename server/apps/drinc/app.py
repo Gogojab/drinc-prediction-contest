@@ -87,6 +87,7 @@ class PredictionsContest(Application):
     def update_wrapper(self):
         """Server Sent Events updating the stock prices and standings"""
         cherrypy.response.headers["Content-Type"] = "text/event-stream"
+        cherrypy.response.headers["Cache-Control"] = "no-cache"
         stocks = self.get_stock_data(full=False)
         users = self.get_leaderboard()
         data = {'stocks':stocks, 'users':users}
