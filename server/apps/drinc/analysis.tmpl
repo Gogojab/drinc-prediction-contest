@@ -25,6 +25,7 @@
 #end def
 
 #def extra_script
+var analysis = {};
 \$(document).ready(function() {
   ## Pie chart showing where the money was spent.
   new Highcharts.Chart({
@@ -56,7 +57,7 @@
   });
 
   ## Graph showing how the race unfolded.
-  new Highcharts.Chart({
+  analysis.race = new Highcharts.Chart({
     chart: {
       renderTo: 'race',
       zoomType: 'xy',
@@ -85,4 +86,23 @@
     series: $race
   });
 });
+#end def
+
+#def extra_script_updates
+for (var i = 0; i < data.users.length; i++) {
+  var user = data.users[i];
+  var series = analysis.race.get(user.initials);
+  var len = series.data.length;
+  if (len > 0) {
+    var today = new Date();
+    var utc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    var lastPoint = series.data[len-1];
+    if (lastPoint.x === utc) {
+      lastPoint.update(100 * user.value, redraw=false);
+    } else {
+      series.addPoint([utc, 100 * user.value], redraw=false);
+    }
+  }
+}
+analysis.race.redraw();
 #end def

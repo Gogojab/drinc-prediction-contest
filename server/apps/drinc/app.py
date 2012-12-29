@@ -92,7 +92,7 @@ class PredictionsContest(Application):
         data = {'stocks':stocks, 'users':users}
         message = 'data: ' + json.dumps(data, cls=DecimalEncoder) + '\nretry: 600000\n\n'
         return message
-    update_wrapper._cp_config = {'response.stream': True, 'tools.encode.on':True, 'tools.encode.encoding':'utf-8'}
+    update_wrapper._cp_config = {'tools.encode.encoding':'utf-8'}
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -196,6 +196,7 @@ class PredictionsContest(Application):
 
         # Figure out how the race unfolded.
         series = [{'type':'line',
+                   'id':member,
                    'name':member,
                    'data':self.get_user_history(member)} for member in members]
         race = json.dumps(series)
@@ -406,11 +407,12 @@ class PredictionsContest(Application):
                 utc = time.mktime(date.timetuple())
                 values.append([1000 * utc, value])
 
-        utcnow = datetime.datetime.utcnow()
-        if utcnow.date() > date.date():
+        today = datetime.date.today()
+        timenow = datetime.datetime.combine(today, datetime.time())
+        if timenow.date() > date.date():
             value = self.get_current_user_value(user)
             if value > 0:
-                utc = time.mktime(utcnow.timetuple())
+                utc = time.mktime(timenow.timetuple())
                 values.append([1000 * utc, value])
 
         return values
