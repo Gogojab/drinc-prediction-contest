@@ -6,6 +6,7 @@ from decimal import Decimal, ROUND_DOWN
 import datetime
 import csv
 import pycassa
+import random
 import simplejson as json
 import threading
 import time
@@ -86,12 +87,23 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_members(users=members)
     def update_wrapper(self):
         """Server Sent Events updating the stock prices and standings"""
+        # Set headers and data.
         cherrypy.response.headers["Content-Type"] = "text/event-stream"
         cherrypy.response.headers["Cache-Control"] = "no-cache"
         stocks = self.get_stock_data(full=False)
         users = self.get_leaderboard()
         data = {'stocks':stocks, 'users':users}
-        message = 'data: ' + json.dumps(data, cls=DecimalEncoder) + '\nretry: 600000\n\n'
+        message = 'data: ' + json.dumps(data, cls=DecimalEncoder)
+
+        # Figure out when new data might next be available - that's on 15
+        # minute boundaries.  Tell the browser to look again then (randomising
+        # a bit to spread the load).
+        now = datetime.datetime.utcnow()
+        delay = 900 - (((60 * now.minute) + now.second) % 900)
+        delay += random.randint(1,11)
+        delay = 1000 * delay
+        message += '\nretry: %d\n\n' % delay
+
         return message
     update_wrapper._cp_config = {'tools.encode.encoding':'utf-8'}
 
