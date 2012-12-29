@@ -444,7 +444,7 @@ class PredictionsContest(Application):
             (date, closing) = (row[0], row[4])
             struct = time.strptime(date, '%d-%b-%y')
             dt = datetime.datetime(*struct[:6])
-            price = float(closing)
+            price = Decimal(closing)
             dict[dt] = price
 
         return dict
