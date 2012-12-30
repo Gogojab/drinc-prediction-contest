@@ -1,0 +1,5 @@
+if [[ -f .pid ]]
+then
+  kill -9 $(< .pid)
+  rm .pid
+fi

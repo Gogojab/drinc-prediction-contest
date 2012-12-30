@@ -1,20 +1,26 @@
+from gevent import monkey; monkey.patch_all()
 import cherrypy
-from classes.application import Application
 from apscheduler.scheduler import Scheduler
 from Cheetah.Template import Template
 from decimal import Decimal, ROUND_DOWN
-import datetime
 import csv
+import datetime
+from gevent import pywsgi
+import logging
+from logging import handlers
+import os.path
 import pycassa
 import random
 import simplejson as json
 import threading
 import time
+import tools.auth_kerberos
+import tools.auth_members
 import urllib2
 import uuid
 import sys
+sys.path.append('templates')
 
-application_class_name = 'PredictionsContest'
 members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
 stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
@@ -37,6 +43,7 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 start_date = datetime.datetime(2012, 12, 18, 18)
 deadline = datetime.datetime(2012, 12, 24, 18)
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Database access.
 db_lock = threading.Lock()
@@ -48,23 +55,11 @@ user_history_col = pycassa.ColumnFamily(pool, 'UserHist')
 stock_history_col = pycassa.ColumnFamily(pool, 'StockHist')
 stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
 
-class PredictionsContest(Application):
-    def __init__(self, root_url='', cwd=''):
-        Application.__init__(self, root_url, cwd)
-        sys.path.append(cwd)
+class PredictionContest(object):
+    def __init__(self):
         self.sched = Scheduler()
 
-    def build(self):
-        self.set_config(self.cwd + '/application.conf')
-        self.add_page('/home', self.home)
-        self.add_page('/account', self.account)
-        self.add_page('/analysis', self.analysis)
-        self.add_page('/purchase', self.purchase)
-        self.add_page('/submit_purchase', self.submit_purchase)
-        self.add_page('/confirm_purchase', self.confirm_purchase)
-        self.add_page('/update_wrapper', self.update_wrapper)
-
-    def setup(self):
+    def start(self):
         self.sched.start()
         self.sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
         self.sched.add_cron_job(self.update_user_histories, day_of_week='0-4', hour=18)
@@ -74,7 +69,7 @@ class PredictionsContest(Application):
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
     def home(self):
-        """Home page for the predictions contest"""
+        """Home page for the prediction contest"""
         user = cherrypy.request.login.split('@')[0].upper()
         account = self.get_account_details(user)
         return self.make_page('home.tmpl', account)
@@ -239,7 +234,7 @@ class PredictionsContest(Application):
         users = self.get_leaderboard()
         past_deadline = datetime.datetime.now() > deadline
         base = {'tickers':data, 'users':users, 'past_deadline':past_deadline}
-        t = Template(file=self.cwd + '/' + template, searchList=[base, details])
+        t = Template(file=current_dir + '/templates/' + template, searchList=[base, details])
         return str(t)
 
     def get_stock_data(self, full=True):
@@ -506,3 +501,53 @@ class DecimalEncoder(json.JSONEncoder):
         if isinstance(obj, Decimal):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
+
+def configure_logging():
+    # Remove the default FileHandlers if present.
+    log = cherrypy.log
+    log.error_file = ""
+    log.access_file = ""
+
+    maxBytes = getattr(log, "rot_maxBytes", 10000000)
+    backupCount = getattr(log, "rot_backupCount", 1000)
+
+    # Make sure we have a directory to put the logs in.
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+
+    # Make a new RotatingFileHandler for the error log.
+    fname = getattr(log, "rot_error_file", "logs/error.log")
+    h = handlers.RotatingFileHandler(fname, 'a', maxBytes, backupCount)
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(cherrypy._cplogging.logfmt)
+    log.error_log.addHandler(h)
+
+    # Make a new RotatingFileHandler for the access log.
+    fname = getattr(log, "rot_access_file", "logs/access.log")
+    h = handlers.RotatingFileHandler(fname, 'a', maxBytes, backupCount)
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(cherrypy._cplogging.logfmt)
+    log.access_log.addHandler(h)
+
+config = {'/': { 'tools.sessions.on':True },
+          '/bootstrap.css': { 'tools.staticfile.on':True,
+                              'tools.staticfile.filename':current_dir + '/css/bootstrap.min.css' },
+          '/bootstrap.js':  { 'tools.staticfile.on':True,
+                              'tools.staticfile.filename':current_dir + '/js/bootstrap.min.js' },
+          '/jquery.js':     { 'tools.staticfile.on':True,
+                              'tools.staticfile.filename':current_dir + '/js/jquery-1.8.3.min.js' },
+          '/highcharts.js': { 'tools.staticfile.on':True,
+                              'tools.staticfile.filename':current_dir + '/js/highcharts.js' }}
+
+if __name__ == "__main__":
+    configure_logging()
+
+    contest = PredictionContest()
+    contest.start()
+    app = cherrypy.tree.mount(contest, '/drinc/', config=config)
+
+    # cherrypy.config.update({'server.socket_host': '0.0.0.0',
+    #                         'server.socket_port': 7070})
+    # cherrypy.engine.start()
+    # cherrypy.engine.block()
+    pywsgi.WSGIServer(('', 7070), app, log=None).serve_forever()
