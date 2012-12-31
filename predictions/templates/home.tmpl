@@ -1,48 +1,47 @@
 #from wrapper import wrapper
 #extends wrapper
 
+#attr $inner_id = "account"
 #def inner
-<div id="account" class="span7">
-  <h2>Account</h2>
-  <h3>Transactions</h3>
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>Stock</th>
-        <th>Purchase price (p)</th>
-        <th>Amount spent (&pound;)</th>
-        <th>Value (&pound;)</th>
-      </tr>
-    </thead>
-    <tbody>
-      #for $transaction in $transactions
-      <tr>
-        <td>$transaction.stock</td>
-        <td>$transaction.price</td>
-        <td>$transaction.cost</td>
-        <td>$transaction.value</td>
-      </tr>
-      #end for
-    </tbody>
-    <tfoot>
-      <tr>
-        <td></td>
-        <td></td>
-        <td>$spent</td>
-        <td>$total</td>
-      </tr>
-    </tfoot>
-  </table>
+<h2>Account</h2>
+<h3>Transactions</h3>
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Stock</th>
+      <th>Purchase price (p)</th>
+      <th>Amount spent (&pound;)</th>
+      <th>Value (&pound;)</th>
+    </tr>
+  </thead>
+  <tbody>
+    #for $transaction in $transactions
+    <tr>
+      <td>$transaction.stock</td>
+      <td>$transaction.price</td>
+      <td>$transaction.cost</td>
+      <td>$transaction.value</td>
+    </tr>
+    #end for
+  </tbody>
+  <tfoot>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>$spent</td>
+      <td>$total</td>
+    </tr>
+  </tfoot>
+</table>
 #if $cash > 0
-  <h3>Balance</h3>
+<h3>Balance</h3>
 #set $used = len($transactions)
 #if $used < 3
-  <p>You have &pound;$cash cash, and have used $used of your 3 purchases.</p>
-  <p>Click <strong><a href=purchase>here</a></strong> to buy.  Don't forget: unspent money isn't worth anything!</p>
+<p>You have &pound;$cash cash, and have used $used of your 3 purchases.</p>
+<p>Click <strong><a href=purchase>here</a></strong> to buy.  Don't forget: unspent money isn't worth anything!</p>
 #else
-  <p>You have &pound;$cash cash, and have used all of your 3 purchases.</p>
-  <p>That cash now can't be spent, and won't be counted.</p>
+<p>You have &pound;$cash cash, and have used all of your 3 purchases.</p>
+<p>That cash now can't be spent, and won't be counted.</p>
 #end if
 #end if
-</div>
 #end def

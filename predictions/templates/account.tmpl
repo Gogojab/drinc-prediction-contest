@@ -9,52 +9,51 @@
 </ul>
 #end def
 
+#attr $inner_id = "account"
 #def inner
-<div id="account" class="span7">
-  <h2>$user's account</h2>
-  <h3>Transactions</h3>
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>Stock</th>
-        <th>Purchase price (p)</th>
-        <th>Amount spent (&pound;)</th>
-        <th>Value (&pound;)</th>
-      </tr>
-    </thead>
-    <tbody>
-      #for $transaction in $transactions
-      <tr>
-        <td>$transaction.stock</td>
-        <td>$transaction.price</td>
-        <td>$transaction.cost</td>
-        <td>$transaction.value</td>
-      </tr>
-      #end for
-    </tbody>
-    <tfoot>
-      <tr>
-        <td></td>
-        <td></td>
-        <td>$spent</td>
-        <td>$total</td>
-      </tr>
-    </tfoot>
-  </table>
-  <form action="account" method="get" class="form-inline">
-    <p>Show
-    <select name="user" class="input-small">
-      #for $member in $members
-      #if $member == $user
-        <option selected="selected">$member</option>
-      #else
-        <option>$member</option>
-      #end if
-      #end for
-    </select>
-    's account
-  </form>
-</div>
+<h2>$user's account</h2>
+<h3>Transactions</h3>
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Stock</th>
+      <th>Purchase price (p)</th>
+      <th>Amount spent (&pound;)</th>
+      <th>Value (&pound;)</th>
+    </tr>
+  </thead>
+  <tbody>
+    #for $transaction in $transactions
+    <tr>
+      <td>$transaction.stock</td>
+      <td>$transaction.price</td>
+      <td>$transaction.cost</td>
+      <td>$transaction.value</td>
+    </tr>
+    #end for
+  </tbody>
+  <tfoot>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>$spent</td>
+      <td>$total</td>
+    </tr>
+  </tfoot>
+</table>
+<form action="account" method="get" class="form-inline">
+  <p>Show
+  <select name="user" class="input-small">
+    #for $member in $members
+    #if $member == $user
+      <option selected="selected">$member</option>
+    #else
+      <option>$member</option>
+    #end if
+    #end for
+  </select>
+  's account
+</form>
 #end def
 
 #def extra_script

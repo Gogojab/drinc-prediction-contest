@@ -1,14 +1,13 @@
 #from wrapper import wrapper
 #extends wrapper
 
+#attr $inner_id = "confirm_purchase"
 #def inner
-<div id="confirm_purchase" class="span7">
-  <p>Buy &pound;$cost of $stock at $price pence</p>
-  <form action="submit_purchase" method="post">
-    <p>
-      <input class="btn btn-primary" type="submit" value="Confirm"/>
-      <input class="btn" type="submit" name="cancel" value="Cancel"/>
-    </p>
-  </form>
-</div>
+<p>Buy &pound;$cost of $stock at $price pence</p>
+<form action="submit_purchase" method="post">
+  <p>
+    <input class="btn btn-primary" type="submit" value="Confirm"/>
+    <input class="btn" type="submit" name="cancel" value="Cancel"/>
+  </p>
+</form>
 #end def
