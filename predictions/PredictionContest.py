@@ -233,8 +233,7 @@ class PredictionContest(object):
         for transaction in transactions:
             # Get the current value, in pounds, of this transaction...
             value_pennies = self.db.get_current_value(transaction)
-            value_pounds = self.pennies_to_pounds(value_pennies)
-            transaction['value'] = value_pounds
+            transaction['value'] = self.pennies_to_pounds(value_pennies)
 
             # ... and convert the cost into pounds.
             transaction['cost'] = self.pennies_to_pounds(transaction['cost'])
