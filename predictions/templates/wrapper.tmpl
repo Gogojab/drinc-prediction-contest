@@ -66,7 +66,7 @@
 #else
 #set hover = ''
 #end if
-            <table id="standings-table" class="table table-condensed table-striped $hover">
+            <table class="table table-condensed table-striped $hover">
               <thead>
                 <tr>
                   <th>Member</th>
@@ -131,8 +131,10 @@
           rows += '<td>'+user.value+'</td>'
           rows += '</tr>'
         }
-        \$("#standings-table tbody").html(rows)
-
+        \$("#standings tbody").html(rows)
+#if $past_deadline
+        \$('#standings tbody tr').click(function() { window.location.href = \$(this).find('a').attr('href'); });
+#end if
         $extra_script_updates
       };
     }
