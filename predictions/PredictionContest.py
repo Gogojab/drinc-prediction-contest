@@ -63,25 +63,35 @@ class PredictionContest(object):
     @cherrypy.tools.auth_members(users=members)
     def home(self):
         """Home page for the prediction contest"""
-        user = cherrypy.request.login.split('@')[0].upper()
+        user = cherrypy.session['user']
         account = self.get_account_details(user)
         return self.make_page('home.tmpl', account)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def update_wrapper(self):
+    def update_page(self, member=None):
         """Server Sent Events updating the stock prices and standings"""
         # Set headers and data.
         cherrypy.response.headers["Content-Type"] = "text/event-stream"
         cherrypy.response.headers["Cache-Control"] = "no-cache"
 
+        # Figure out the stock prices...
         make_data = lambda x: {'ticker': x, 'price': self.db.get_stock_price(x)}
         stock_prices = [make_data(ticker) for ticker in stocks]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
 
+        # ... the standings...
         users = self.get_leaderboard()
         data = {'stocks':stock_data, 'users':users}
+
+        # ... and, maybe, the details of an individual account.
+        if member:
+            user = cherrypy.session['user']
+            if member == user or self.deadline_passed():
+                account = self.get_account_details(member)
+                data['account'] = account
+
         message = 'data: ' + json.dumps(data, cls=DecimalEncoder)
 
         # Figure out when new data might next be available - that's on 15
@@ -94,20 +104,18 @@ class PredictionContest(object):
         message += '\nretry: %d\n\n' % delay
 
         return message
-    update_wrapper._cp_config = {'tools.encode.encoding':'utf-8'}
+    update_page._cp_config = {'tools.encode.encoding':'utf-8'}
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def account(self, **kwargs):
+    def account(self, user=None):
         """Display the details of a user's account"""
-        if datetime.datetime.now() < self.deadline:
+        if not self.deadline_passed():
             raise cherrypy.HTTPRedirect("home")
 
-        if 'user' in kwargs:
-            user = kwargs['user']
-        else:
-            user = cherrypy.request.login.split('@')[0].upper()
+        if not user:
+            user = cherrypy.session['user']
 
         if user not in members:
             raise cherrypy.HTTPRedirect("home")
@@ -157,7 +165,7 @@ class PredictionContest(object):
         if cancel:
             raise cherrypy.HTTPRedirect('home')
 
-        if datetime.datetime.now() > self.deadline:
+        if self.deadline_passed():
             raise cherrypy.HTTPRedirect('home')
 
         # Retrieve, and then expire, session data containing details of purchase.
@@ -176,7 +184,7 @@ class PredictionContest(object):
         # If the purchase is allowed, make it.
         self.db_lock.acquire()
         try:
-            user = cherrypy.request.login.split('@')[0].upper()
+            user = cherrypy.session['user']
             if self.is_purchase_allowed(user, stock, price, cost):
                 self.db.record_purchase(user, stock, price, cost)
 
@@ -190,7 +198,7 @@ class PredictionContest(object):
     @cherrypy.tools.auth_members(users=members)
     def analysis(self):
         """Analysis page"""
-        if datetime.datetime.now() < self.deadline:
+        if not self.deadline_passed():
             raise cherrypy.HTTPRedirect('home')
 
         # Figure out where the money went.
@@ -204,6 +212,10 @@ class PredictionContest(object):
                    'data':self.get_user_history(member)} for member in members]
         race = json.dumps(series)
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
+
+    def deadline_passed(self):
+        """Have we passed the deadline?"""
+        return datetime.datetime.now() > self.deadline
 
     def get_all_stock_expenditure(self):
         """Figure out how much was spent on each stock"""
@@ -219,35 +231,31 @@ class PredictionContest(object):
         stock_prices = [make_data(ticker, name) for (ticker, name) in stocks.iteritems()]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
         users = self.get_leaderboard()
-        past_deadline = datetime.datetime.now() > self.deadline
-        base = {'tickers':stock_data, 'users':users, 'past_deadline':past_deadline}
+        base = {'tickers':stock_data, 'users':users, 'past_deadline':self.deadline_passed()}
         t = Template(file=app_dir + '/templates/' + template, searchList=[base, details])
         return str(t)
 
     def get_account_details(self, user):
         """Get the details describing a user account"""
-        transactions = self.db.get_user_transactions(user)
-
-        total = 0
-        spent = 0
-        for transaction in transactions:
-            # Get the current value, in pounds, of this transaction...
+        def convert(transaction):
             value_pennies = self.db.get_current_value(transaction)
-            transaction['value'] = self.pennies_to_pounds(value_pennies)
+            detail = {'stock':transaction['stock'],
+                      'price':transaction['price'],
+                      'cost' :self.pennies_to_pounds(transaction['cost']),
+                      'value':self.pennies_to_pounds(value_pennies)}
+            return detail
 
-            # ... and convert the cost into pounds.
-            transaction['cost'] = self.pennies_to_pounds(transaction['cost'])
+        transactions = self.db.get_user_transactions(user)
+        details = [convert(transaction) for transaction in transactions]
+        total = sum([detail['value'] for detail in details])
+        spent = sum([detail['cost'] for detail in details])
 
-            # Update the total value and spend.
-            total = total + transaction['value']
-            spent = spent + transaction['cost']
-
-        if datetime.datetime.now() < self.deadline:
-            cash = 1000 - spent
-        else:
+        if self.deadline_passed():
             cash = 0
+        else:
+            cash = 1000 - spent
 
-        account = {'user':user, 'transactions':transactions, 'total':total, 'spent':spent, 'cash':cash}
+        account = {'user':user, 'transactions':details, 'total':total, 'spent':spent, 'cash':cash}
         return account
 
     def get_leaderboard(self):
