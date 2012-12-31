@@ -292,7 +292,7 @@ class PredictionContest(object):
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
         pounds = Decimal(pennies) / 100
-        pounds = pounds.quantize(Decimal('.01'))
+        pounds = pounds.quantize(Decimal('.01'), rounding=ROUND_DOWN)
         return pounds
 
     def get_user_history(self, user):
