@@ -54,9 +54,9 @@ class PredictionContest(object):
     def __init__(self, db, start_date, deadline):
         """Initialization"""
         self.db = db
-        self.db_lock = threading.Lock()
         self.start_date = start_date
         self.deadline = deadline
+        self._db_lock = threading.Lock()
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -94,11 +94,9 @@ class PredictionContest(object):
 
         message = 'data: ' + json.dumps(data, cls=DecimalEncoder)
 
-        # Figure out when new data might next be available - that's on 15
-        # minute boundaries.  Tell the browser to look again then (randomising
+        # Don't ask again until there might be new data available (randomising
         # a bit to spread the load).
-        now = datetime.datetime.utcnow()
-        delay = 900 - (((60 * now.minute) + now.second) % 900)
+        delay = self.db.get_requery_delay()
         delay += random.randint(1,11)
         delay = 1000 * delay
         message += '\nretry: %d\n\n' % delay
@@ -182,14 +180,14 @@ class PredictionContest(object):
             raise cherrypy.HTTPRedirect('home')
 
         # If the purchase is allowed, make it.
-        self.db_lock.acquire()
+        self._db_lock.acquire()
         try:
             user = cherrypy.session['user']
             if self.is_purchase_allowed(user, stock, price, cost):
                 self.db.record_purchase(user, stock, price, cost)
 
         finally:
-            self.db_lock.release()
+            self._db_lock.release()
 
         raise cherrypy.HTTPRedirect('home')
 

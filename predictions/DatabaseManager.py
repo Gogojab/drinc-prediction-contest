@@ -4,6 +4,7 @@ import csv
 import datetime
 import pycassa
 import simplejson as json
+import threading
 import time
 import urllib2
 import uuid
@@ -21,13 +22,29 @@ class DatabaseManager(object):
     def __init__(self, members, tickers):
         self.members = members
         self.tickers = tickers
-        self.sched = Scheduler()
+        self._updated = threading.Condition()
+        self._sched = Scheduler()
 
     def start(self):
-        self.sched.start()
-        self.sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
-        self.sched.add_cron_job(self.update_user_histories, day_of_week='0-4', hour=18)
-        self.sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
+        self._sched.start()
+        self._sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
+        self._sched.add_cron_job(self.update_user_histories, day_of_week='0-4', hour=18)
+        self._sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
+
+    def wait_for_update(self):
+        """Block until the database is updated"""
+        self._updated.acquire()
+        try:
+            self._updated.wait()
+        finally:
+            self._updated.release()
+
+    def get_requery_delay(self):
+        """Say how many seconds it'll be before it's worth re-querying the database"""
+        # How long is it until the next 15-minute boundary?
+        now = datetime.datetime.utcnow()
+        delay = 900 - (((60 * now.minute) + now.second) % 900)
+        return delay
 
     def get_stock_expenditure(self, ticker):
         """Figure out how much was spent on a given stock"""
@@ -192,6 +209,13 @@ class DatabaseManager(object):
         """Update the Stocks column family with all the latest prices"""
         for ticker in self.tickers:
             self.update_stock_price(ticker)
+
+        # Also notify anyone who is waiting to know that this has happened.
+        self._updated.acquire()
+        try:
+            self._updated.notifyAll()
+        finally:
+            self._updated.release()
 
     def update_stock_price(self, ticker):
         """Update the Stocks column family with the latest price for a stock"""
