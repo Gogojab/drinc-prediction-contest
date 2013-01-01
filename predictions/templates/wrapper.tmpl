@@ -121,27 +121,27 @@
         ## Update the standings, and the analysis graph (if present).
         var rows=''
         for (var i = 0; i < data.standings.length; i++) {
-          var user = data.standings[i]
+          var member = data.standings[i]
           rows += '<tr>'
 #if $past_deadline
-          rows += '<td><a href="account?member='+user.initials+'">'+user.initials+'</a></td>'
+          rows += '<td><a href="account?member='+member.initials+'">'+member.initials+'</a></td>'
 #else
-          rows += '<td>'+'user.initials+'</td>'
+          rows += '<td>'+'member.initials+'</td>'
 #end if
-          rows += '<td>'+user.value+'</td>'
+          rows += '<td>'+member.value+'</td>'
           rows += '</tr>'
 
           if (typeof analysis !== "undefined") {
-            var series = analysis.race.get(user.initials);
+            var series = analysis.race.get(member.initials);
             var len = series.data.length;
             if (len > 0) {
               var today = new Date();
               var utc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
               var lastPoint = series.data[len-1];
               if (lastPoint.x === utc) {
-                lastPoint.update(100 * user.value, redraw=false);
+                lastPoint.update(100 * member.value, redraw=false);
               } else {
-                series.addPoint([utc, 100 * user.value], redraw=false);
+                series.addPoint([utc, 100 * member.value], redraw=false);
               }
             }
           }
