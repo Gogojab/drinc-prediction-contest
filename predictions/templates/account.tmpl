@@ -11,7 +11,7 @@
 
 #attr $inner_id = "account"
 #def inner
-<h2>$user's account</h2>
+<h2>$member's account</h2>
 <h3>Transactions</h3>
 <table class="table table-bordered table-striped">
   <thead>
@@ -44,11 +44,11 @@
 <form action="account" method="get" class="form-inline">
   <p>Show
   <select name="user" class="input-small">
-    #for $member in $members
-    #if $member == $user
-      <option selected="selected">$member</option>
+    #for $option in $members
+    #if $option == $member
+      <option selected="selected">$option</option>
     #else
-      <option>$member</option>
+      <option>$option</option>
     #end if
     #end for
   </select>

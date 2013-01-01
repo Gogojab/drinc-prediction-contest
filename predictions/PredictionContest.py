@@ -82,8 +82,8 @@ class PredictionContest(object):
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
 
         # ... the standings...
-        users = self.get_leaderboard()
-        data = {'stocks':stock_data, 'users':users}
+        standings = self.get_leaderboard()
+        data = {'stocks':stock_data, 'standings':standings}
 
         # ... and, maybe, the details of an individual account.
         if member:
@@ -107,18 +107,18 @@ class PredictionContest(object):
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
     @cherrypy.tools.auth_members(users=members)
-    def account(self, user=None):
-        """Display the details of a user's account"""
+    def account(self, member=None):
+        """Display the details of a member's account"""
         if not self.deadline_passed():
             raise cherrypy.HTTPRedirect("home")
 
-        if not user:
-            user = cherrypy.session['user']
+        if not member:
+            member = cherrypy.session['user']
 
-        if user not in members:
+        if member not in members:
             raise cherrypy.HTTPRedirect("home")
 
-        dict = self.get_account_details(user)
+        dict = self.get_account_details(member)
         dict['members'] = members
         return self.make_page('account.tmpl', dict)
 
@@ -207,7 +207,7 @@ class PredictionContest(object):
         series = [{'type':'line',
                    'id':member,
                    'name':member,
-                   'data':self.get_user_history(member)} for member in members]
+                   'data':self.get_member_history(member)} for member in members]
         race = json.dumps(series)
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
@@ -228,13 +228,13 @@ class PredictionContest(object):
         make_data = lambda ticker, name: {'ticker': ticker, 'price': self.db.get_stock_price(ticker), 'full_name': name}
         stock_prices = [make_data(ticker, name) for (ticker, name) in stocks.iteritems()]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
-        users = self.get_leaderboard()
-        base = {'tickers':stock_data, 'users':users, 'past_deadline':self.deadline_passed()}
+        standings = self.get_leaderboard()
+        base = {'tickers':stock_data, 'standings':standings, 'past_deadline':self.deadline_passed()}
         t = Template(file=app_dir + '/templates/' + template, searchList=[base, details])
         return str(t)
 
-    def get_account_details(self, user):
-        """Get the details describing a user account"""
+    def get_account_details(self, member):
+        """Get the details describing a member account"""
         def convert(transaction):
             value_pennies = self.db.get_current_value(transaction)
             detail = {'stock':transaction['stock'],
@@ -243,7 +243,7 @@ class PredictionContest(object):
                       'value':self.pennies_to_pounds(value_pennies)}
             return detail
 
-        transactions = self.db.get_user_transactions(user)
+        transactions = self.db.get_member_transactions(member)
         details = [convert(transaction) for transaction in transactions]
         total = sum([detail['value'] for detail in details])
         spent = sum([detail['cost'] for detail in details])
@@ -253,20 +253,20 @@ class PredictionContest(object):
         else:
             cash = 1000 - spent
 
-        account = {'user':user, 'transactions':details, 'total':total, 'spent':spent, 'cash':cash}
+        account = {'member':member, 'transactions':details, 'total':total, 'spent':spent, 'cash':cash}
         return account
 
     def get_leaderboard(self):
         """Calculates the leaderboard"""
-        def details(user):
-            pennies = self.db.get_current_user_value(user)
+        def details(member):
+            pennies = self.db.get_current_member_value(member)
             pounds = self.pennies_to_pounds(pennies)
-            return {'initials':user, 'value':pounds}
+            return {'initials':member, 'value':pounds}
 
-        users = [details(member) for member in members]
-        return sorted(users, key=lambda x: x['value'], reverse=True)
+        standings = [details(member) for member in members]
+        return sorted(standings, key=lambda x: x['value'], reverse=True)
 
-    def is_purchase_allowed(self, user, stock, price, cost):
+    def is_purchase_allowed(self, member, stock, price, cost):
         """Decide whether a purchase is allowed"""
         # Only allow positive expenditure!
         if cost <= 0:
@@ -276,16 +276,16 @@ class PredictionContest(object):
         if stock not in stocks:
             return False
 
-        # Get the transactions that this user has already made.
-        user_transactions = self.db.get_user_transactions(user)
+        # Get the transactions that this member has already made.
+        transactions = self.db.get_member_transactions(member)
 
-        # Don't allow more than three purchases per user.
-        if len(user_transactions) > 2:
+        # Don't allow more than three purchases per member.
+        if len(transactions) > 2:
             return False
 
-        # Figure out how much the user has so far spent (in pennies).
+        # Figure out how much the member has so far spent (in pennies).
         spent = 0
-        for transaction in user_transactions:
+        for transaction in transactions:
             spent = spent + transaction['cost']
 
         # Don't allow over-spending.
@@ -300,10 +300,10 @@ class PredictionContest(object):
         pounds = pounds.quantize(Decimal('.01'), rounding=ROUND_DOWN)
         return pounds
 
-    def get_user_history(self, user):
-        """Get the historical value of a user's portfolio"""
+    def get_member_history(self, member):
+        """Get the historical value of a member's portfolio"""
         make_pair = lambda date, value: [1000 * time.mktime(date.timetuple()), value]
-        data = self.db.get_user_history(user, self.start_date)
+        data = self.db.get_member_history(member, self.start_date)
         values = [make_pair(date, value) for (date, value) in data.iteritems() if value > 0]
 
         # If we don't have a 'historical' value for today, add the current
@@ -311,7 +311,7 @@ class PredictionContest(object):
         today = datetime.date.today()
         timenow = datetime.datetime.combine(today, datetime.time())
         if timenow.date() > date.date():
-            value = self.db.get_current_user_value(user)
+            value = self.db.get_current_member_value(member)
             if value > 0:
                 final_point = make_pair(timenow, value)
                 values.append(final_point)

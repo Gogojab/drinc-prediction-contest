@@ -66,14 +66,14 @@
                 </tr>
               </thead>
               <tbody>
-                #for $member in $users
+                #for $detail in $standings
                 <tr>
 #if $past_deadline
-                  <td><a href="account?user=$member.initials">$member.initials</a></td>
+                  <td><a href="account?member=$detail.initials">$detail.initials</a></td>
 #else
-                  <td>$member.initials</td>
+                  <td>$detail.initials</td>
 #end if
-                  <td>$member.value</td>
+                  <td>$detail.value</td>
                 </tr>
                 #end for
               </tbody>
@@ -104,8 +104,8 @@
 
     ## Automatic updating of page data.
     if (typeof(EventSource) !== "undefined") {
-#if $varExists('user')
-      var updates = new EventSource("update_page?member=$user");
+#if $varExists('member')
+      var updates = new EventSource("update_page?member=$member");
 #else
       var updates = new EventSource("update_page");
 #end if
@@ -120,11 +120,11 @@
 
         ## Update the standings, and the analysis graph (if present).
         var rows=''
-        for (var i = 0; i < data.users.length; i++) {
-          var user = data.users[i]
+        for (var i = 0; i < data.standings.length; i++) {
+          var user = data.standings[i]
           rows += '<tr>'
 #if $past_deadline
-          rows += '<td><a href="account?user='+user.initials+'">'+user.initials+'</a></td>'
+          rows += '<td><a href="account?member='+user.initials+'">'+user.initials+'</a></td>'
 #else
           rows += '<td>'+'user.initials+'</td>'
 #end if
