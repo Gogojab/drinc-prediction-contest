@@ -46,6 +46,7 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:PSN' : 'Persimmon',
           'LON:SHP' : 'Shire',
           'LON:SLN' : 'Silence Therapeutics',
+          'LON:TFW' : 'FW Thorpe',
           'LON:TSCO': 'Tesco',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 
@@ -360,8 +361,8 @@ def start_server(contest, port=7070, use_gevent=True):
         cherrypy.engine.start()
         cherrypy.engine.block()
 
-start_date = datetime.datetime(2012, 12, 18, 18)
-deadline = datetime.datetime(2012, 12, 24, 18)
+start_date = datetime.datetime(2013, 1, 22, 18)
+deadline = datetime.datetime(2013, 1, 29, 18)
 
 if __name__ == "__main__":
     db = DatabaseManager(members, stocks.keys())
