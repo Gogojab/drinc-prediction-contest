@@ -29,11 +29,11 @@ app_config = {'/':              { 'tools.sessions.on':True },
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
 members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
-stocks = {'LON:BYG' : 'Big Yellow Group',
+stocks = {'LON:ADM' : 'Admiral Group',
+          'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
           'LON:CMX' : 'Catalyst Media Group',
           'LON:DLAR': 'De La Rue',
-          'LON:EMG' : 'Man Group',
           'LON:FSTA': 'Fuller, Smith and Turner',
           'LON:GAW' : 'Games Workshop Group',
           'LON:GRG' : 'Greggs',
@@ -44,9 +44,9 @@ stocks = {'LON:BYG' : 'Big Yellow Group',
           'LON:NXR' : 'Norcros',
           'LON:OMG' : 'OMG',
           'LON:PSN' : 'Persimmon',
+          'LON:PYM' : 'Phytopharm',
           'LON:SHP' : 'Shire',
           'LON:SLN' : 'Silence Therapeutics',
-          'LON:TFW' : 'FW Thorpe',
           'LON:TSCO': 'Tesco',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 
@@ -361,8 +361,8 @@ def start_server(contest, port=7070, use_gevent=True):
         cherrypy.engine.start()
         cherrypy.engine.block()
 
-start_date = datetime.datetime(2013, 1, 22, 18)
-deadline = datetime.datetime(2013, 1, 29, 18)
+start_date = datetime.datetime(2013, 2, 18, 18)
+deadline = datetime.datetime(2013, 2, 26, 18)
 
 if __name__ == "__main__":
     db = DatabaseManager(members, stocks.keys())
