@@ -4,7 +4,9 @@
 #def navigationList
 <ul class="nav">
   <li><a href="home">Home</a></li>
+#if $past_deadline
   <li><a href="account">Accounts</a></li>
+#end if
   <li class="active"><a href="analysis">Analysis</a></li>
 </ul>
 #end def
@@ -14,9 +16,11 @@
 <h3>How the race unfolded</h3>
 <div id="race" style="min-width: 400px; height: 400px">
 </div>
+#if $past_deadline
 <h3>Where the money went</h3>
 <div id="expenditure" style="min-width: 400px; height: 400px">
 </div>
+#end if
 #end def
 
 #def extra_script_source
@@ -26,6 +30,7 @@
 #def extra_script
 var analysis = {};
 \$(document).ready(function() {
+#if $past_deadline
   ## Pie chart showing where the money was spent.
   new Highcharts.Chart({
     chart: {
@@ -54,6 +59,7 @@ var analysis = {};
       data: $expenditure
     }]
   });
+#end if
 
   ## Graph showing how the race unfolded.
   analysis.race = new Highcharts.Chart({

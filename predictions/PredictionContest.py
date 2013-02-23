@@ -197,9 +197,6 @@ class PredictionContest(object):
     @cherrypy.tools.auth_members(users=members)
     def analysis(self):
         """Analysis page"""
-        if not self.deadline_passed():
-            raise cherrypy.HTTPRedirect('home')
-
         # Figure out where the money went.
         spent = self.get_all_stock_expenditure()
         expenditure = json.dumps(spent)
