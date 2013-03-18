@@ -2,8 +2,8 @@ from apscheduler.scheduler import Scheduler
 from decimal import Decimal
 import csv
 import datetime
+import json
 import pycassa
-import simplejson as json
 import threading
 import time
 import urllib2

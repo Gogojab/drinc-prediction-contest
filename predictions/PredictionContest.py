@@ -5,11 +5,11 @@ from DatabaseManager import DatabaseManager
 from decimal import Decimal, ROUND_DOWN
 import datetime
 from gevent import pywsgi
+import json
 import logging
 from logging import handlers
 import os.path
 import random
-import simplejson as json
 import threading
 import time
 import tools.auth_kerberos
@@ -28,12 +28,11 @@ app_config = {'/':              { 'tools.sessions.on':True },
               '/highcharts.js': { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
-members = ['CRS', 'DCH', 'DHM', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
+members = ['CRS', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
 stocks = {'LON:ADM' : 'Admiral Group',
           'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
           'LON:CMX' : 'Catalyst Media Group',
-          'LON:DLAR': 'De La Rue',
           'LON:FSTA': 'Fuller, Smith and Turner',
           'LON:GAW' : 'Games Workshop Group',
           'LON:GRG' : 'Greggs',
@@ -43,11 +42,10 @@ stocks = {'LON:ADM' : 'Admiral Group',
           'LON:NETD': 'Net Dimensions (Holdings) Limited',
           'LON:NXR' : 'Norcros',
           'LON:OMG' : 'OMG',
-          'LON:PSN' : 'Persimmon',
-          'LON:PYM' : 'Phytopharm',
           'LON:SHP' : 'Shire',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TSCO': 'Tesco',
+          'LON:TCG' : 'Thomas Cook Group',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 
 class PredictionContest(object):
@@ -308,7 +306,7 @@ class PredictionContest(object):
         # value.
         today = datetime.date.today()
         timenow = datetime.datetime.combine(today, datetime.time())
-        if timenow.date() > date.date():
+        if not values or timenow.date() > date.date():
             value = self.db.get_current_member_value(member)
             if value > 0:
                 final_point = make_pair(timenow, value)
@@ -358,8 +356,8 @@ def start_server(contest, port=7070, use_gevent=True):
         cherrypy.engine.start()
         cherrypy.engine.block()
 
-start_date = datetime.datetime(2013, 2, 18, 18)
-deadline = datetime.datetime(2013, 2, 26, 18)
+start_date = datetime.datetime(2013, 3, 18, 18)
+deadline = datetime.datetime(2013, 3, 25, 18)
 
 if __name__ == "__main__":
     db = DatabaseManager(members, stocks.keys())
