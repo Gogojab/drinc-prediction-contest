@@ -24,7 +24,7 @@ app_config = {'/':              { 'tools.sessions.on':True },
               '/bootstrap.js':  { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/bootstrap.min.js' },
               '/jquery.js':     { 'tools.staticfile.on':True,
-                                  'tools.staticfile.filename':app_dir + '/js/jquery-1.8.3.min.js' },
+                                  'tools.staticfile.filename':app_dir + '/js/jquery-1.9.1.min.js' },
               '/highcharts.js': { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
