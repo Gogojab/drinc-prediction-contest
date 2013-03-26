@@ -33,11 +33,8 @@ class DatabaseManager(object):
 
     def wait_for_update(self):
         """Block until the database is updated"""
-        self._updated.acquire()
-        try:
+        with self._updated:
             self._updated.wait()
-        finally:
-            self._updated.release()
 
     def get_requery_delay(self):
         """Say how many seconds it'll be before it's worth re-querying the database"""
@@ -211,11 +208,8 @@ class DatabaseManager(object):
             self.update_stock_price(ticker)
 
         # Also notify anyone who is waiting to know that this has happened.
-        self._updated.acquire()
-        try:
+        with self._updated:
             self._updated.notifyAll()
-        finally:
-            self._updated.release()
 
     def update_stock_price(self, ticker):
         """Update the Stocks column family with the latest price for a stock"""

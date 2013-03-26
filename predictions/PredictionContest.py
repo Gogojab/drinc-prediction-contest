@@ -179,14 +179,10 @@ class PredictionContest(object):
             raise cherrypy.HTTPRedirect('home')
 
         # If the purchase is allowed, make it.
-        self._db_lock.acquire()
-        try:
-            user = cherrypy.session['user']
+        user = cherrypy.session['user']
+        with self._db_lock:
             if self.is_purchase_allowed(user, stock, price, cost):
                 self.db.record_purchase(user, stock, price, cost)
-
-        finally:
-            self._db_lock.release()
 
         raise cherrypy.HTTPRedirect('home')
 
