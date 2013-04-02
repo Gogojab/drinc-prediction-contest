@@ -136,7 +136,13 @@
             var len = series.data.length;
             if (len > 0) {
               var today = new Date();
-              var utc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+              today.setHours(0,0,0,0);
+              var utc = Date.UTC(today.getUTCFullYear(),
+                                 today.getUTCMonth(),
+                                 today.getUTCDate(),
+                                 today.getUTCHours(),
+                                 today.getUTCMinutes(),
+                                 today.getUTCSeconds());
               var lastPoint = series.data[len-1];
               if (lastPoint.x === utc) {
                 lastPoint.update(100 * member.value, redraw=false);
