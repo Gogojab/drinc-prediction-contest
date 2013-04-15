@@ -2,6 +2,7 @@ from apscheduler.scheduler import Scheduler
 from decimal import Decimal
 import csv
 import datetime
+import itertools
 import json
 import pycassa
 import threading
@@ -182,7 +183,8 @@ class DatabaseManager(object):
             lines = urllib2.urlopen(url).read().splitlines()
             quote = json.loads(''.join([x for x in lines if x not in ('// [', ']')]))
             price = quote['l_cur'].replace(',','')
-            price = Decimal(price[3:])
+            price = ''.join(itertools.dropwhile(lambda x: x.isalpha(), price))
+            price = Decimal(price)
         except:
             price = None
 

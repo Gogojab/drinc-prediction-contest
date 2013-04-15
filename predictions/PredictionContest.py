@@ -38,14 +38,15 @@ stocks = {'LON:ADM' : 'Admiral Group',
           'LON:GRG' : 'Greggs',
           'LON:HIK' : 'Hikma Pharmaceuticals',
           'LON:LLOY': 'Lloyds Banking Group',
+          'LON:LSUG': 'Leveraged Sugar',
           'LON:MRO' : 'Melrose',
           'LON:NETD': 'Net Dimensions (Holdings) Limited',
           'LON:NXR' : 'Norcros',
           'LON:OMG' : 'OMG',
           'LON:SHP' : 'Shire',
           'LON:SLN' : 'Silence Therapeutics',
+          'LON:TREE': 'Cambium Global Timberland',
           'LON:TSCO': 'Tesco',
-          'LON:TCG' : 'Thomas Cook Group',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 
 class PredictionContest(object):
@@ -352,8 +353,8 @@ def start_server(contest, port=7070, use_gevent=True):
         cherrypy.engine.start()
         cherrypy.engine.block()
 
-start_date = datetime.datetime(2013, 3, 18, 18)
-deadline = datetime.datetime(2013, 3, 25, 18)
+start_date = datetime.datetime(2013, 4, 22, 18)
+deadline = datetime.datetime(2013, 4, 22, 18)
 
 if __name__ == "__main__":
     db = DatabaseManager(members, stocks.keys())
