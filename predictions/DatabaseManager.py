@@ -73,23 +73,6 @@ class DatabaseManager(object):
             value = 0
         return int(value)
 
-    def get_value_at(self, transaction, date):
-        """Gets the value of a transaction on a particular date, in pennies"""
-        cost = transaction['cost']
-        stock = transaction['stock']
-        purchase_price = transaction['price']
-        if transaction['date'] < date:
-            try:
-                history = stock_history_col.get(stock, column_start=date, column_count=1, column_reversed=True)
-                for (date, price) in history.items():
-                    value = (cost * price) / purchase_price
-            except:
-                value = 0
-        else:
-            value = 0
-
-        return int(value)
-
     def get_current_member_value(self, member):
         """Get a member's current value, in pennies"""
         try:
@@ -101,20 +84,6 @@ class DatabaseManager(object):
         for tid in tids:
             transaction = transactions_col.get(tid)
             total = total + self.get_current_value(transaction)
-
-        return total
-
-    def get_member_value_at(self, member, date):
-        """Get a member's current value on a particular date, in pennies"""
-        try:
-            tids = transactions_by_member_col.get(member)
-        except:
-            tids = {}
-
-        total = 0
-        for tid in tids:
-            transaction = transactions_col.get(tid)
-            total = total + self.get_value_at(transaction, date)
 
         return total
 
