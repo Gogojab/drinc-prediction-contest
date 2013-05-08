@@ -73,8 +73,8 @@ class PredictionContest(object):
     def update_page(self, member=None):
         """Server Sent Events updating the stock prices and standings"""
         # Set headers and data.
-        cherrypy.response.headers["Content-Type"] = "text/event-stream"
-        cherrypy.response.headers["Cache-Control"] = "no-cache"
+        cherrypy.response.headers['Content-Type'] = 'text/event-stream'
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
 
         # Figure out the stock prices...
         make_data = lambda x: {'ticker': x, 'price': self.db.get_stock_price(x)}
@@ -110,13 +110,13 @@ class PredictionContest(object):
     def account(self, member=None):
         """Display the details of a member's account"""
         if not self.deadline_passed():
-            raise cherrypy.HTTPRedirect("home")
+            raise cherrypy.HTTPRedirect('home')
 
         if not member:
             member = cherrypy.session['user']
 
         if member not in members:
-            raise cherrypy.HTTPRedirect("home")
+            raise cherrypy.HTTPRedirect('home')
 
         dict = self.get_account_details(member)
         dict['members'] = members
@@ -320,12 +320,12 @@ class DecimalEncoder(json.JSONEncoder):
 def configure_logging():
     # Remove the default FileHandlers if present.
     log = cherrypy.log
-    log.error_file = ""
-    log.access_file = ""
+    log.error_file = ''
+    log.access_file = ''
 
     # Make sure we have a directory to put the logs in.
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
 
     # Utility to create a RotatingFileHandler.
     def getRotatingFileHandler(filename):
@@ -335,11 +335,11 @@ def configure_logging():
         return handler
 
     # Make a new RotatingFileHandler for the error log.
-    handler = getRotatingFileHandler("logs/error.log")
+    handler = getRotatingFileHandler('logs/error.log')
     log.error_log.addHandler(handler)
 
     # Make a new RotatingFileHandler for the access log.
-    handler = getRotatingFileHandler("logs/access.log")
+    handler = getRotatingFileHandler('logs/access.log')
     log.access_log.addHandler(handler)
 
 def start_server(contest, port=7070, use_gevent=True):
@@ -356,7 +356,7 @@ def start_server(contest, port=7070, use_gevent=True):
 start_date = datetime.datetime(2013, 4, 22, 18)
 deadline = datetime.datetime(2013, 4, 22, 18)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
     db.start()
     contest = PredictionContest(db, start_date, deadline)
