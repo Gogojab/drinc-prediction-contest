@@ -342,16 +342,10 @@ def configure_logging():
     handler = getRotatingFileHandler('logs/access.log')
     log.access_log.addHandler(handler)
 
-def start_server(contest, port=7070, use_gevent=True):
+def start_server(contest, port=7070):
     """Start the server"""
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
-    if use_gevent:
-        pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
-    else:
-        cherrypy.config.update({'server.socket_host': '0.0.0.0',
-                                'server.socket_port': port})
-        cherrypy.engine.start()
-        cherrypy.engine.block()
+    pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
 start_date = datetime.datetime(2013, 4, 22, 18)
 deadline = datetime.datetime(2013, 4, 22, 18)
