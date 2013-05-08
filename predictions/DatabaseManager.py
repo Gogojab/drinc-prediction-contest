@@ -21,12 +21,14 @@ stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
 
 class DatabaseManager(object):
     def __init__(self, members, tickers):
+        """Initialization"""
         self.members = members
         self.tickers = tickers
         self._updated = threading.Condition()
         self._sched = Scheduler()
 
     def start(self):
+        """Start the database manager"""
         self._sched.start()
         self._sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
         self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18)

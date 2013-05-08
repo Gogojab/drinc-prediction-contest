@@ -312,12 +312,14 @@ class PredictionContest(object):
         return values
 
 class DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that understands Decimal objects"""
     def default(self, obj):
         if isinstance(obj, Decimal):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
 def configure_logging():
+    """Configure logging on our web server"""
     # Remove the default FileHandlers if present.
     log = cherrypy.log
     log.error_file = ''
