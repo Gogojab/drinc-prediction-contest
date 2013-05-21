@@ -28,7 +28,7 @@ app_config = {'/':              { 'tools.sessions.on':True },
               '/highcharts.js': { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
-members = ['CRS', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
+members = ['CJT', 'CRS', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
 stocks = {'LON:ADM' : 'Admiral Group',
           'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
@@ -37,13 +37,13 @@ stocks = {'LON:ADM' : 'Admiral Group',
           'LON:GAW' : 'Games Workshop Group',
           'LON:GRG' : 'Greggs',
           'LON:HIK' : 'Hikma Pharmaceuticals',
-          'LON:LLOY': 'Lloyds Banking Group',
           'LON:LSUG': 'Leveraged Sugar',
           'LON:MRO' : 'Melrose',
           'LON:NETD': 'Net Dimensions (Holdings) Limited',
           'LON:NXR' : 'Norcros',
           'LON:OMG' : 'OMG',
           'LON:SHP' : 'Shire',
+          'LON:SIA' : 'SOCO International',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TREE': 'Cambium Global Timberland',
           'LON:TSCO': 'Tesco',
@@ -349,8 +349,8 @@ def start_server(contest, port=7070):
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
-start_date = datetime.datetime(2013, 4, 22, 18)
-deadline = datetime.datetime(2013, 4, 22, 18)
+start_date = datetime.datetime(2013, 5, 20, 18)
+deadline = datetime.datetime(2013, 5, 27, 18)
 
 if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
