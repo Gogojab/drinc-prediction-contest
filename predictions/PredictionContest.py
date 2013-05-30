@@ -276,12 +276,8 @@ class PredictionContest(object):
         if len(transactions) > 2:
             return False
 
-        # Figure out how much the member has so far spent (in pennies).
-        spent = 0
-        for transaction in transactions:
-            spent = spent + transaction['cost']
-
         # Don't allow over-spending.
+        spent = sum([transaction['cost'] for transaction in transactions])
         if spent + cost > 100000:
             return False
 
