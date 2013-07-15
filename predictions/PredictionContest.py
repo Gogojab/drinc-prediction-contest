@@ -42,12 +42,12 @@ stocks = {'LON:ADM' : 'Admiral Group',
           'LON:NETD': 'Net Dimensions (Holdings) Limited',
           'LON:NXR' : 'Norcros',
           'LON:OMG' : 'OMG',
+          'LON:RRS' : 'Randgold Resources Limited',
           'LON:SHP' : 'Shire',
           'LON:SIA' : 'SOCO International',
           'LON:SLN' : 'Silence Therapeutics',
           'LON:TREE': 'Cambium Global Timberland',
           'LON:TSCO': 'Tesco',
-          'LON:VSVS': 'Vesuvius',
           'LON:ZZZ' : 'Snoozebox Holdings'}
 
 class PredictionContest(object):
@@ -346,8 +346,8 @@ def start_server(contest, port=7070):
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
-start_date = datetime.datetime(2013, 6, 17, 9)
-deadline = datetime.datetime(2013, 6, 24, 18)
+start_date = datetime.datetime(2013, 7, 16, 9)
+deadline = datetime.datetime(2013, 7, 22, 18)
 
 if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
