@@ -1,5 +1,6 @@
 from gevent import monkey; monkey.patch_all()
 import cherrypy
+from apscheduler.scheduler import Scheduler
 from Cheetah.Template import Template
 from DatabaseManager import DatabaseManager
 from decimal import Decimal, ROUND_DOWN
@@ -58,6 +59,12 @@ class PredictionContest(object):
         self.start_date = start_date
         self.deadline = deadline
         self._db_lock = threading.Lock()
+        self._sched = Scheduler()
+
+    def start(self):
+        """Start the PredictionContest"""
+        self._sched.start()
+        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18)
 
     @cherrypy.expose
     @cherrypy.tools.auth_kerberos()
@@ -316,6 +323,15 @@ class PredictionContest(object):
 
         return values
 
+    def update_member_histories(self):
+        """Update the member histories in the database"""
+        today = datetime.date.today()
+        timestamp = datetime.datetime.combine(today, datetime.time())
+        for member in members:
+            if self.remaining_cash(member) == 0:
+                worth = self.db.get_current_member_value(member)
+                self.db.update_member_history(member, timestamp, worth)
+
 class DecimalEncoder(json.JSONEncoder):
     """JSON encoder that understands Decimal objects"""
     def default(self, obj):
@@ -361,5 +377,6 @@ if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
     db.start()
     contest = PredictionContest(db, start_date, deadline)
+    contest.start()
     configure_logging()
     start_server(contest)

@@ -31,7 +31,6 @@ class DatabaseManager(object):
         """Start the database manager"""
         self._sched.start()
         self._sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
-        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18)
         self._sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
 
     def wait_for_update(self):
@@ -167,13 +166,9 @@ class DatabaseManager(object):
             dict = self.get_stock_history_from_google(stock)
             stock_history_col.insert(stock, dict)
 
-    def update_member_histories(self):
+    def update_member_history(self, member, timestamp, worth):
         """Update the UserHist column family"""
-        today = datetime.date.today()
-        timestamp = datetime.datetime.combine(today, datetime.time())
-        for member in self.members:
-            worth = self.get_current_member_value(member)
-            member_history_col.insert(member, {timestamp: worth})
+        member_history_col.insert(member, {timestamp: worth})
 
     def update_stock_prices(self):
         """Update the Stocks column family with all the latest prices"""
