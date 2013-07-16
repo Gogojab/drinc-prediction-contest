@@ -183,7 +183,7 @@ class PredictionContest(object):
         # If the purchase is allowed, make it.
         user = cherrypy.session['user']
         with self._db_lock:
-            if self.is_purchase_allowed(user, stock, price, cost):
+            if self.is_purchase_allowed(user, stock, cost):
                 self.db.record_purchase(user, stock, price, cost)
 
         raise cherrypy.HTTPRedirect('home')
@@ -260,7 +260,7 @@ class PredictionContest(object):
         standings = [details(member) for member in members]
         return sorted(standings, key=lambda x: x['value'], reverse=True)
 
-    def is_purchase_allowed(self, member, stock, price, cost):
+    def is_purchase_allowed(self, member, stock, cost):
         """Decide whether a purchase is allowed"""
         # Only allow positive expenditure!
         if cost <= 0:
