@@ -164,9 +164,6 @@ class PredictionContest(object):
         if cancel:
             raise cherrypy.HTTPRedirect('home')
 
-        if self.deadline_passed():
-            raise cherrypy.HTTPRedirect('home')
-
         # Retrieve, and then expire, session data containing details of purchase.
         try:
             stock = cherrypy.session.get('stock')
@@ -242,10 +239,8 @@ class PredictionContest(object):
         total = sum([detail['value'] for detail in details])
         spent = sum([detail['cost'] for detail in details])
 
-        if self.deadline_passed():
-            cash = 0
-        else:
-            cash = 1000 - spent
+        cash = self.remaining_cash(transactions=transactions)
+        cash = self.pennies_to_pounds(cash)
 
         account = {'member':member, 'transactions':details, 'total':total, 'spent':spent, 'cash':cash}
         return account
@@ -271,17 +266,22 @@ class PredictionContest(object):
             return False
 
         # Don't allow over-spending.
-        if cost > self.remaining_cash(member):
+        if cost > self.remaining_cash(member=member):
             return False
 
         # Allow the purchase.
         return True
 
-    def remaining_cash(self, member):
+    def remaining_cash(self, member="", transactions=None):
         """Figure out how much cash a member has left to spend, in pennies"""
 
-        # Get the transactions that this member has already made.
-        transactions = self.db.get_member_transactions(member)
+        # After the deadline, no expenditure is allowed.
+        if self.deadline_passed():
+            return 0
+
+        # If we're not told the member's transactions, go get them.
+        if transactions is None:
+            transactions = self.db.get_member_transactions(member)
 
         # Don't allow more than three purchases.
         if len(transactions) > 2:
