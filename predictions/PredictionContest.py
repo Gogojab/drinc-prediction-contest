@@ -270,19 +270,27 @@ class PredictionContest(object):
         if stock not in stocks:
             return False
 
+        # Don't allow over-spending.
+        if cost > self.remaining_cash(member):
+            return False
+
+        # Allow the purchase.
+        return True
+
+    def remaining_cash(self, member):
+        """Figure out how much cash a member has left to spend, in pennies"""
+
         # Get the transactions that this member has already made.
         transactions = self.db.get_member_transactions(member)
 
-        # Don't allow more than three purchases per member.
+        # Don't allow more than three purchases.
         if len(transactions) > 2:
-            return False
+            return 0
 
-        # Don't allow over-spending.
+        # Cash remaining is cash allowed, minus cash spent.
         spent = sum([transaction['cost'] for transaction in transactions])
-        if spent + cost > 100000:
-            return False
-
-        return True
+        cash = 100000 - spent
+        return cash
 
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
