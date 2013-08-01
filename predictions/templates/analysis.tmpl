@@ -50,7 +50,9 @@ var analysis = {};
     },
     tooltip: {
       formatter: function() {
-        return this.point.name + " \xa3" + this.point.y / 100;
+        var pounds = (this.point.y / 100);
+        pounds = ((pounds % 1) === 0) ? pounds : pounds.toFixed(2);
+        return this.point.name + " \xa3" + pounds;
       }
     },
     series: [{
@@ -74,7 +76,8 @@ var analysis = {};
     yAxis: {
       labels: {
         formatter: function() {
-          return "\xa3" + this.value / 100;
+          var pounds = (this.value / 100);
+          return "\xa3" + pounds;
         }
       },
       title: { text: null }
@@ -82,9 +85,10 @@ var analysis = {};
     tooltip: {
       formatter: function() {
         var date = new Date(this.x);
+        var pounds = (this.y / 100).toFixed(2);
         format = "<span style=\"font-size: 10px\">" + date.toLocaleDateString() + "</span><br />" +
         "<span style=\"color: " + this.series.color + "\">" + this.series.name + ": </span>" +
-        "<b>\xa3" + this.y / 100 + "</b>";
+        "<b>\xa3" + pounds + "</b>";
         return format;
       }
     },
