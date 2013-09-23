@@ -29,7 +29,7 @@ app_config = {'/':              { 'tools.sessions.on':True },
               '/highcharts.js': { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
-members = ['CJT', 'CRS', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
+members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
 stocks = {'LON:ADM' : 'Admiral Group',
           'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
