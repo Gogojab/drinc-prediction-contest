@@ -28,7 +28,7 @@ Then edit `server/PredictionsContest.py`:
   * This should contains stocks that we own, plus zero or more bonus stocks that were discussed at the meeting
   * So remove last month's bonus stocks, add this month's bonus stocks, and make updates according to what we sold or bought
 * Update the `start_date` and `deadline` (near the bottom of the file)
-  * The start date should usually be 9am on the day after the meeting
+  * The start date should usually be 9pm on the day of the meeting
   * The deadline should usually be 6pm on the day one week after the meeting
 
 Finally, restart the server:
