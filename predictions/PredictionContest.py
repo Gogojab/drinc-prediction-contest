@@ -31,12 +31,14 @@ app_config = {'/':              { 'tools.sessions.on':True },
 
 members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
 stocks = {'LON:ADM' : 'Admiral Group',
+          'LON:BVS' : 'Bovis Homes Group',
           'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
           'LON:CMX' : 'Catalyst Media Group',
           'LON:FSTA': 'Fuller, Smith and Turner',
           'LON:GAW' : 'Games Workshop Group',
           'LON:HIK' : 'Hikma Pharmaceuticals',
+          'LON:HSP' : 'Hargreaves Services',
           'LON:MRO' : 'Melrose',
           'LON:NBU' : 'Naibu Global International Company',
           'LON:NETD': 'Net Dimensions (Holdings) Limited',
@@ -368,8 +370,8 @@ def start_server(contest, port=7070):
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
-start_date = datetime.datetime(2013, 9, 17, 9)
-deadline = datetime.datetime(2013, 9, 23, 18)
+start_date = datetime.datetime(2013, 10, 21, 9)
+deadline = datetime.datetime(2013, 10, 28, 18)
 
 if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
