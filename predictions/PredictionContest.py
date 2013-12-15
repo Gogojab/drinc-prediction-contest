@@ -29,12 +29,13 @@ app_config = {'/':              { 'tools.sessions.on':True },
               '/highcharts.js': { 'tools.staticfile.on':True,
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
-members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR']
+members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR', 'WAN']
 stocks = {'LON:ADM' : 'Admiral Group',
           'LON:BVS' : 'Bovis Homes Group',
           'LON:BYG' : 'Big Yellow Group',
           'LON:CINE': 'Cineworld Group',
           'LON:CMX' : 'Catalyst Media Group',
+          'LON:FJET': 'Fastjet',
           'LON:FSTA': 'Fuller, Smith and Turner',
           'LON:GAW' : 'Games Workshop Group',
           'LON:HIK' : 'Hikma Pharmaceuticals',
@@ -306,7 +307,7 @@ class PredictionContest(object):
         return pounds
 
     def get_member_history(self, member):
-        """Get the historical value of a member's portfolio"""
+        """Get the historical value of a member's portfolio for this month"""
         make_pair = lambda date, value: [1000 * time.mktime(date.timetuple()), value]
         data = self.db.get_member_history(member, self.start_date)
         values = [make_pair(date, value) for (date, value) in data.iteritems() if value > 0]
@@ -370,8 +371,8 @@ def start_server(contest, port=7070):
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
-start_date = datetime.datetime(2013, 10, 21, 9)
-deadline = datetime.datetime(2013, 10, 28, 18)
+start_date = datetime.datetime(2013, 11, 18, 21)
+deadline = datetime.datetime(2013, 11, 25, 18)
 
 if __name__ == '__main__':
     db = DatabaseManager(members, stocks.keys())
