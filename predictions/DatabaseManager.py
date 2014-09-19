@@ -11,7 +11,7 @@ import urllib2
 import uuid
 
 # Database access.
-pool = pycassa.ConnectionPool('PredictionContest', server_list=['flash:9160'])
+pool = pycassa.ConnectionPool('PredictionContest', server_list=['localhost:9160'])
 transactions_by_member_col = pycassa.ColumnFamily(pool, 'TransactionsByUser')
 transactions_by_stock_col = pycassa.ColumnFamily(pool, 'TransactionsByStock')
 transactions_col = pycassa.ColumnFamily(pool, 'Transactions')

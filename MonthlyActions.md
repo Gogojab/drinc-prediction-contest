@@ -1,13 +1,13 @@
 Resetting the contest each month
 ================================
 
-The code runs on flash, under `/home/dch`.  This document describes how to reset the contest each month.
+The code runs on hans, under `/home/dch`.  This document describes how to reset the contest each month.
 
 TODO: Implement an administrator web interface that does all this stuff!
 
 First, remove last month's transactions from the database.  Note that _only_ the `TransactionsByUser` and `TransactionsByStock` column families are truncated - leave `Transactions` alone!
 
-    [root@flash dch]# ./dsc-cassandra-1.0.9/bin/cassandra-cli -h localhost
+    [root@hans dch]# ./dsc-cassandra-1.0.9/bin/cassandra-cli -h localhost
     Connected to: "Test Cluster" on localhost/9160
     Welcome to Cassandra CLI version 1.0.9
 
@@ -36,13 +36,13 @@ Finally, restart the server:
 * Make sure you're picking up the right python virtualenv:
 
     ```
-    [root@flash dch]# source python26/bin/activate
-    (python26)[root@flash dch]#
+    [root@hans dch]# source python26/bin/activate
+    (python26)[root@hans dch]#
     ```
 
 * Change into the server directory, and run the `start` script:
 
     ```
-    (python26)[root@flash dch]# cd server
-    (python26)[root@flash server]# ./start
+    (python26)[root@hans dch]# cd server
+    (python26)[root@hans server]# ./start
     ```
