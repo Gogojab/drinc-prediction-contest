@@ -1,4 +1,6 @@
-from gevent import monkey; monkey.patch_all()
+from gevent import monkey;
+
+monkey.patch_all()
 import cherrypy
 from apscheduler.scheduler import Scheduler
 from Cheetah.Template import Template

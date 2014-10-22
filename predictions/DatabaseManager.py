@@ -9,15 +9,8 @@ import threading
 import time
 import urllib2
 import uuid
+from PostgresManager import PostgresManager
 
-# Database access.
-pool = pycassa.ConnectionPool('PredictionContest', server_list=['localhost:9160'])
-transactions_by_member_col = pycassa.ColumnFamily(pool, 'TransactionsByUser')
-transactions_by_stock_col = pycassa.ColumnFamily(pool, 'TransactionsByStock')
-transactions_col = pycassa.ColumnFamily(pool, 'Transactions')
-member_history_col = pycassa.ColumnFamily(pool, 'UserHist')
-stock_history_col = pycassa.ColumnFamily(pool, 'StockHist')
-stocks_col = pycassa.ColumnFamily(pool, 'Stocks')
 
 class DatabaseManager(object):
     def __init__(self, members, tickers):
@@ -26,6 +19,7 @@ class DatabaseManager(object):
         self.tickers = tickers
         self._updated = threading.Condition()
         self._sched = Scheduler()
+        self._db_manager = PostgresManager(members, tickers)
 
     def start(self):
         """Start the database manager"""
@@ -47,68 +41,27 @@ class DatabaseManager(object):
 
     def get_stock_expenditure(self, ticker):
         """Figure out how much was spent on a given stock"""
-        try:
-            transactions = transactions_by_stock_col.get(ticker)
-            spent = sum([int(x) for x in transactions.values()])
-        except:
-            spent = 0
-
-        return spent
+        self._db_manager.get_stock_expenditure(ticker)
 
     def get_member_transactions(self, member):
         """Get the transactions associated with a member"""
-        try:
-            transaction_ids = transactions_by_member_col.get(member)
-            transactions = [transactions_col.get(tid) for tid in transaction_ids]
-        except:
-            transactions = []
-        return transactions
+        return self._db_manager.get_member_transactions(member)
 
     def get_current_value(self, transaction):
         """Gets the current value of a transaction, in pennies"""
-        try:
-            stock = stocks_col.get(transaction['stock'])
-            cost = transaction['cost']
-            value = (cost * stock['price']) / transaction['price']
-        except:
-            value = 0
-        return int(value)
+        return self._db_manager.get_current_value(transaction)
 
     def get_current_member_value(self, member):
         """Get a member's current value, in pennies"""
-        try:
-            tids = transactions_by_member_col.get(member)
-        except:
-            tids = {}
-
-        total = 0
-        for tid in tids:
-            transaction = transactions_col.get(tid)
-            total = total + self.get_current_value(transaction)
-
-        return total
+        return self._db_manager.get_current_member_value(member)
 
     def record_purchase(self, member, stock, price, cost):
         """Updates the database with a record of a purchase."""
-        transaction = {'user':member,
-                       'stock':stock,
-                       'date':datetime.datetime.utcnow(),
-                       'price':price,
-                       'cost':cost}
-        transaction_id = uuid.uuid4()
-
-        transactions_col.insert(transaction_id, transaction)
-        transactions_by_member_col.insert(member, {transaction_id:stock})
-        transactions_by_stock_col.insert(stock, {transaction_id:cost})
+        self._db_manager.record_purchase(member, stock, price, cost)
 
     def get_member_history(self, member, start_date):
         """Get the historical value of a member's portfolio"""
-        try:
-            history = member_history_col.get(member, column_start=start_date)
-        except:
-            history = {}
-
-        return history
+        return self._db_manager.get_member_history(member, start_date)
 
     def get_stock_history_from_google(self, ticker):
         """Goes to the internet, and returns a dictionary in which the keys are dates,
@@ -139,12 +92,7 @@ class DatabaseManager(object):
 
     def get_stock_price_from_db(self, ticker):
         """Gets a recent stock price from the database"""
-        try:
-            price = stocks_col.get(ticker)['price']
-        except:
-            price = None
-
-        return price
+        return self._db_manager.get_stock_price_from_db(ticker)
 
     def get_stock_price_from_google(self, ticker):
         """Returns the latest stock price from Google Finance"""
@@ -162,13 +110,11 @@ class DatabaseManager(object):
 
     def update_stock_histories(self):
         """Update the StockHist column family"""
-        for stock in self.tickers:
-            dict = self.get_stock_history_from_google(stock)
-            stock_history_col.insert(stock, dict)
+        self._db_manager.update_stock_histories()
 
     def update_member_history(self, member, timestamp, worth):
         """Update the UserHist column family"""
-        member_history_col.insert(member, {timestamp: worth})
+        self._db_manager.update_member_history(member, timestamp, worth)
 
     def update_stock_prices(self):
         """Update the Stocks column family with all the latest prices"""
@@ -182,6 +128,7 @@ class DatabaseManager(object):
     def update_stock_price(self, ticker):
         """Update the Stocks column family with the latest price for a stock"""
         price = self.get_stock_price_from_google(ticker)
+
         if price:
-            stocks_col.insert(ticker, {'price':price})
+            self._db_manager.update_stock_price(ticker, price)
         return price
