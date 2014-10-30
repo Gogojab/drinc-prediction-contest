@@ -24,34 +24,36 @@ class PostgresManager(object):
         # try:
         # transactions = transactions_by_stock_col.get(ticker)
 
-        cur = self.conn.cursor()
-        sql = "SELECT cost FROM transactions WHERE stock = %s"
-        cur.execute(sql, (ticker,))
-        spent = sum([x for (x,) in (cur.fetchall())])
-        print "Spent %d" % spent
+        with self.conn.cursor() as cur:
+          sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock WHERE ticker = %s"
+          cur.execute(sql, (ticker,))
+          self.conn.commit()
+          spent = sum([x for (x,) in (cur.fetchall())])
+          print "Spent %d" % spent
 
         return spent
 
+
     def get_member_transactions(self, member):
         """Get the transactions associated with a member"""
-        # try:
 
-        cur = self.conn.cursor()
-        sql = "SELECT stock, price, cost FROM transactions_stocks WHERE member = %s"
-        cur.execute(sql, (member,))
+        with self.conn.cursor() as cur:
+            sql = "SELECT stock, price, cost FROM transactions_stocks WHERE member = %s"
+            cur.execute(sql, (member,))
 
-        transactions = [{'stock': stock, 'price': price, 'cost': cost} for (stock, price, cost) in cur.fetchall()]
+            transactions = [{'stock': stock, 'price': price, 'cost': cost} for (stock, price, cost) in cur.fetchall()]
 
-        print transactions
-        # transaction_ids = transactions_by_member_col.get(member)
-        #     transactions = [transactions_col.get(tid) for tid in transaction_ids]
-        # except:
-        #     transactions = []
+            # print transactions
+            # transaction_ids = transactions_by_member_col.get(member)
+            #     transactions = [transactions_col.get(tid) for tid in transaction_ids]
+            # except:
+            #     transactions = []
         return transactions
 
     def get_current_value(self, transaction):
         """Gets the current value of a transaction, in pennies"""
-        try:
+
+        with self.conn.cursor() as cur:
             cur = self.conn.cursor()
             sql = "SELECT price FROM stocks WHERE ticker = %s"
             cur.execute(sql, (transaction['stock'],))
@@ -66,8 +68,6 @@ class PostgresManager(object):
             print transaction['price']
             value = (cost * price) / transaction['price']
 
-        except:
-            value = 0
         return int(value)
 
     def get_current_member_value(self, member):
@@ -103,10 +103,8 @@ class PostgresManager(object):
         sql = "INSERT INTO transactions (price, cost, member, stock) " \
               "VALUES (%s, %s, %s, (SELECT pkey from stocks WHERE ticker = %s))"
 
-        cur = self.conn.cursor()
-        cur.execute(sql, (price, cost, member, stock))
-        print "inserted values"
-        self.conn.commit()
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (price, cost, member, stock))
 
 
     def get_stock_price_from_db(self, ticker):
@@ -116,10 +114,10 @@ class PostgresManager(object):
         # except:
         #     price = None
 
-        cur = self.conn.cursor()
-        sql = "SELECT price FROM stocks WHERE ticker = %s"
-        cur.execute(sql, (ticker,))
-        (price,) = cur.fetchone()
+        with self.conn.cursor() as cur:
+            sql = "SELECT price FROM stocks WHERE ticker = %s"
+            cur.execute(sql, (ticker,))
+            (price,) = cur.fetchone()
 
         return price
 
@@ -133,13 +131,12 @@ class PostgresManager(object):
         #     history = {}
 
         sql = "SELECT timestamp, value FROM member_history WHERE member = %s AND timestamp >= %s;"
-        cur = self.conn.cursor()
-        cur.execute(sql, (member, start_date))
-        history = cur.fetchall()
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (member, start_date))
+            history = cur.fetchall()
 
         # Convert this into a dictionary.
         # History is a list of date, value pairs.
-
 
         return history
 
@@ -149,9 +146,8 @@ class PostgresManager(object):
         # member_history_col.insert(member, {timestamp: worth})
 
         sql = "INSERT INTO member_history (member, timestamp, value) VALUES (%s, %s, %s)"
-        cur = self.conn.cursor()
-        cur.execute(sql, (member, timestamp, worth))
-        self.conn.commit()
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (member, timestamp, worth))
 
     def update_stock_histories(self):
         """Update the StockHist column family"""
@@ -166,9 +162,8 @@ class PostgresManager(object):
     def update_stock_price(self, ticker, price):
         """Update the Stocks column family with the latest price for a stock"""
         sql = "UPDATE stocks SET price = %(price)s WHERE ticker = %(ticker)s; INSERT INTO stocks (ticker, price) SELECT %(ticker)s, %(price)s WHERE NOT EXISTS (SELECT 1 FROM stocks WHERE ticker = %(ticker)s);"
-        cur = self.conn.cursor()
-        cur.execute(sql, {'price' : price, 'ticker' : ticker})
-        self.conn.commit()
+        with self.conn.cursor() as cur:
+            cur.execute(sql, {'price' : price, 'ticker' : ticker})
 
 
 if __name__ == '__main__':
