@@ -132,3 +132,7 @@ class DatabaseManager(object):
         if price:
             self._db_manager.update_stock_price(ticker, price)
         return price
+
+    def get_members(self):
+        """Get the list of DRINC members"""
+        self._db_manager.get_members();
