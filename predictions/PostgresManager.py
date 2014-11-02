@@ -25,14 +25,13 @@ class PostgresManager(object):
         # transactions = transactions_by_stock_col.get(ticker)
 
         with self.conn.cursor() as cur:
-          sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock WHERE ticker = %s"
-          cur.execute(sql, (ticker,))
-          self.conn.commit()
-          spent = sum([x for (x,) in (cur.fetchall())])
-          print "Spent %d" % spent
+            sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock WHERE ticker = %s"
+            cur.execute(sql, (ticker,))
+            self.conn.commit()
+            spent = sum([x for (x,) in (cur.fetchall())])
+            print "Spent %d" % spent
 
         return spent
-
 
     def get_member_transactions(self, member):
         """Get the transactions associated with a member"""
@@ -116,7 +115,6 @@ class PostgresManager(object):
 
         return price
 
-
     def get_member_history(self, member, start_date):
         """Get the historical value of a member's portfolio"""
         # try:
@@ -129,19 +127,16 @@ class PostgresManager(object):
               "WHERE m.username = %s AND timestamp >= %s;"
         with self.conn.cursor() as cur:
             cur.execute(sql, (member, start_date))
-            history = cur.fetchall()
-
-        # Convert this into a dictionary.
-        # History is a list of date, value pairs.
+            history = { date : value for (date, value) in cur.fetchall()}
 
         return history
-
 
     def update_member_history(self, member, timestamp, worth):
         """Update the UserHist column family"""
         # member_history_col.insert(member, {timestamp: worth})
 
-        sql = "INSERT INTO member_history (member, timestamp, value) VALUES ((SELECT pkey FROM members WHERE username = %s), %s, %s)"
+        sql = "INSERT INTO member_history (member, timestamp, value) " \
+              "VALUES ((SELECT pkey FROM members WHERE username = %s), %s, %s)"
         with self.conn.cursor() as cur:
             cur.execute(sql, (member, timestamp, worth))
 
@@ -162,6 +157,14 @@ class PostgresManager(object):
               "WHERE NOT EXISTS (SELECT 1 FROM stocks WHERE ticker = %(ticker)s);"
         with self.conn.cursor() as cur:
             cur.execute(sql, {'price' : price, 'ticker' : ticker})
+
+    def get_members(self):
+        """Get the list of DRINC members"""
+        sql = "SELECT username FROM members;"
+        with self.conn.cursor() as cur:
+            cur.execute(sql)
+            members = [x for (x,) in cur.fetchall()]
+        return members
 
 
 if __name__ == '__main__':
@@ -189,3 +192,5 @@ if __name__ == '__main__':
     print history
 
     pgm.update_stock_price('GOOG', 234.25)
+
+    print pgm.get_members()
