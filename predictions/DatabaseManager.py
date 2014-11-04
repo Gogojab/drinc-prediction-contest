@@ -13,13 +13,13 @@ from PostgresManager import PostgresManager
 
 
 class DatabaseManager(object):
-    def __init__(self, members, tickers):
+    def __init__(self):
         """Initialization"""
-        self.members = members
-        self.tickers = tickers
         self._updated = threading.Condition()
         self._sched = Scheduler()
-        self._db_manager = PostgresManager(members, tickers)
+        self._db_manager = PostgresManager()
+        self.tickers = self._db_manager.get_stocks()
+        self.members = self._db_manager.get_members()
 
     def start(self):
         """Start the database manager"""
@@ -134,5 +134,5 @@ class DatabaseManager(object):
         return price
 
     def get_members(self):
-        """Get the list of DRINC members"""
-        self._db_manager.get_members();
+        """Get the list of members"""
+        self._db_manager.get_members()

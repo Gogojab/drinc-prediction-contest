@@ -32,27 +32,6 @@ app_config = {'/':              { 'tools.sessions.on':True },
                                   'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
 
 members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR', 'WAN']
-stocks = {'LON:ADM' : 'Admiral Group',
-          'LON:BVS' : 'Bovis Homes Group',
-          'LON:BYG' : 'Big Yellow Group',
-          'LON:CINE': 'Cineworld Group',
-          'LON:CMX' : 'Catalyst Media Group',
-          'LON:FJET': 'Fastjet',
-          'LON:FSTA': 'Fuller, Smith and Turner',
-          'LON:GAW' : 'Games Workshop Group',
-          'LON:HIK' : 'Hikma Pharmaceuticals',
-          'LON:HSP' : 'Hargreaves Services',
-          'LON:MRO' : 'Melrose',
-          'LON:NBU' : 'Naibu Global International Company',
-          'LON:NETD': 'Net Dimensions (Holdings) Limited',
-          'LON:NXR' : 'Norcros',
-          'LON:OMG' : 'OMG',
-          'LON:SHP' : 'Shire',
-          'LON:SIA' : 'SOCO International',
-          'LON:SLN' : 'Silence Therapeutics',
-          'LON:TREE': 'Cambium Global Timberland',
-          'LON:TSCO': 'Tesco',
-          'LON:ZZZ' : 'Snoozebox Holdings'}
 
 class PredictionContest(object):
     """CherryPy application running the monthly prediction contest"""
@@ -63,6 +42,8 @@ class PredictionContest(object):
         self.deadline = deadline
         self._db_lock = threading.Lock()
         self._sched = Scheduler()
+        self.stocks = self.db.tickers
+        self.members = self.db.members
 
     def start(self):
         """Start the PredictionContest"""
@@ -89,7 +70,7 @@ class PredictionContest(object):
 
         # Figure out the stock prices...
         make_data = lambda x: {'ticker': x, 'price': self.db.get_stock_price(x)}
-        stock_prices = [make_data(ticker) for ticker in stocks]
+        stock_prices = [make_data(ticker) for ticker in self.stocks]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
 
         # ... the standings...
@@ -126,11 +107,11 @@ class PredictionContest(object):
         if not member:
             member = cherrypy.session['user']
 
-        if member not in members:
+        if member not in self.members:
             raise cherrypy.HTTPRedirect('home')
 
         dict = self.get_account_details(member)
-        dict['members'] = members
+        dict['members'] = self.members
         return self.make_page('account.tmpl', dict)
 
     @cherrypy.expose
@@ -138,7 +119,7 @@ class PredictionContest(object):
     @cherrypy.tools.auth_members(users=members)
     def purchase(self):
         """Page to purchase a stock"""
-        tickers = sorted(stocks.keys())
+        tickers = sorted(self.stocks.keys())
         return self.make_page('purchase.tmpl', {'stocks':tickers})
 
     @cherrypy.expose
@@ -208,7 +189,7 @@ class PredictionContest(object):
         series = [{'type':'line',
                    'id':member,
                    'name':member,
-                   'data':self.get_member_history(member)} for member in members]
+                   'data':self.get_member_history(member)} for member in self.members]
         race = json.dumps(series)
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
@@ -218,7 +199,7 @@ class PredictionContest(object):
 
     def get_all_stock_expenditure(self):
         """Figure out how much was spent on each stock"""
-        details = [(ticker, self.db.get_stock_expenditure(ticker)) for ticker in stocks]
+        details = [(ticker, self.db.get_stock_expenditure(ticker)) for ticker in self.stocks]
         expenditure = [{'name':ticker, 'y':y} for (ticker, y) in details if y > 0]
 
         return sorted(expenditure, key=lambda val: val['y'], reverse=True)
@@ -227,7 +208,7 @@ class PredictionContest(object):
         """Make a page: figure out the generic information required for the wrapper and then
         use the provided template"""
         make_data = lambda ticker, name: {'ticker': ticker, 'price': self.db.get_stock_price(ticker), 'full_name': name}
-        stock_prices = [make_data(ticker, name) for (ticker, name) in stocks.iteritems()]
+        stock_prices = [make_data(ticker, name) for (ticker, name) in self.stocks.iteritems()]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
         standings = self.get_leaderboard()
         base = {'tickers':stock_data, 'standings':standings, 'past_deadline':self.deadline_passed()}
@@ -262,7 +243,7 @@ class PredictionContest(object):
             pounds = self.pennies_to_pounds(pennies)
             return {'initials':member, 'value':pounds}
 
-        standings = [details(member) for member in members]
+        standings = [details(member) for member in self.members]
         return sorted(standings, key=lambda x: x['value'], reverse=True)
 
     def is_purchase_allowed(self, member, stock, cost):
@@ -272,7 +253,7 @@ class PredictionContest(object):
             return False
 
         # Only allow purchases of the permitted stocks.
-        if stock not in stocks:
+        if stock not in self.stocks:
             return False
 
         # Don't allow over-spending.
@@ -330,7 +311,7 @@ class PredictionContest(object):
         """Update the member histories in the database"""
         today = datetime.date.today()
         timestamp = datetime.datetime.combine(today, datetime.time())
-        for member in members:
+        for member in self.members:
             if self.remaining_cash(member) == 0:
                 worth = self.db.get_current_member_value(member)
                 self.db.update_member_history(member, timestamp, worth)
@@ -374,10 +355,10 @@ def start_server(contest, port=7070):
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
 start_date = datetime.datetime(2013, 11, 18, 21)
-deadline = datetime.datetime(2013, 11, 25, 18)
+deadline = datetime.datetime(2014, 11, 25, 18)
 
 if __name__ == '__main__':
-    db = DatabaseManager(members, stocks.keys())
+    db = DatabaseManager()
     db.start()
     contest = PredictionContest(db, start_date, deadline)
     contest.start()

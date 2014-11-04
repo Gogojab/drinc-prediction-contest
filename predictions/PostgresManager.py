@@ -5,10 +5,7 @@ import urlparse
 
 
 class PostgresManager(object):
-    def __init__(self, members, tickers):
-        self.members = members
-        self.tickers = tickers
-
+    def __init__(self):
         urlparse.uses_netloc.append("postgres")
         url = urlparse.urlparse(os.environ["DATABASE_URL"])
 
@@ -25,11 +22,11 @@ class PostgresManager(object):
         # transactions = transactions_by_stock_col.get(ticker)
 
         with self.conn.cursor() as cur:
-            sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock WHERE ticker = %s"
+            sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock " \
+                  "WHERE ticker = %s"
             cur.execute(sql, (ticker,))
             self.conn.commit()
             spent = sum([x for (x,) in (cur.fetchall())])
-            print "Spent %d" % spent
 
         return spent
 
@@ -100,7 +97,6 @@ class PostgresManager(object):
         with self.conn.cursor() as cur:
             cur.execute(sql, (price, cost, member, stock))
 
-
     def get_stock_price_from_db(self, ticker):
         """Gets a recent stock price from the database"""
         # try:
@@ -166,31 +162,41 @@ class PostgresManager(object):
             members = [x for (x,) in cur.fetchall()]
         return members
 
+    def get_stocks(self):
+        """Get the list of current stocks"""
+        sql = "SELECT ticker, name FROM stocks;"
+        with self.conn.cursor() as cur:
+            cur.execute(sql)
+            stocks = {t : n for (t, n) in cur.fetchall()}
+        return stocks
+
 
 if __name__ == '__main__':
     pgm = PostgresManager(['WAN', 'DCH'], ['TEST'])
     # pgm.get_stock_expenditure("TEST")
 
-    trans = pgm.get_member_transactions("WAN")
-    current_value = pgm.get_current_value(trans[0])
-    print current_value
-
-    value = pgm.get_current_member_value("WAN")
-    print "Value of WAN is %s" % value
-
-    pgm.record_purchase("WAN", 'TREE', 243, 34)
-
-    price = pgm.get_stock_price_from_db('TREE')
-    print "Price of tree is %s" % price
-
-    today = datetime.date.today()
-    timestamp = datetime.datetime.combine(today, datetime.time())
-    pgm.update_member_history('WAN', timestamp, 123.23)
-
-    start_date = datetime.datetime(2014, 10, 20)
-    history = pgm.get_member_history('WAN', start_date)
-    print history
-
-    pgm.update_stock_price('GOOG', 234.25)
+    # trans = pgm.get_member_transactions("WAN")
+    # current_value = pgm.get_current_value(trans[0])
+    # print current_value
+    #
+    # value = pgm.get_current_member_value("WAN")
+    # print "Value of WAN is %s" % value
+    #
+    # pgm.record_purchase("WAN", 'TREE', 243, 34)
+    #
+    # price = pgm.get_stock_price_from_db('TREE')
+    # print "Price of tree is %s" % price
+    #
+    # today = datetime.date.today()
+    # timestamp = datetime.datetime.combine(today, datetime.time())
+    # pgm.update_member_history('WAN', timestamp, 123.23)
+    #
+    # start_date = datetime.datetime(2014, 10, 20)
+    # history = pgm.get_member_history('WAN', start_date)
+    # print history
+    #
+    # pgm.update_stock_price('GOOG', 234.25)
 
     print pgm.get_members()
+
+    print pgm.get_stocks()
