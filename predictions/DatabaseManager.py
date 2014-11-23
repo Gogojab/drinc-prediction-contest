@@ -19,7 +19,9 @@ class DatabaseManager(object):
         self._sched = Scheduler()
         self._db_manager = PostgresManager()
         self.tickers = self._db_manager.get_stocks()
-        self.members = self._db_manager.get_members()
+        users_passwords = self._db_manager.get_members()
+        self.members = [x for (x,y) in users_passwords]
+        self.auth_details = {x: y for (x,y) in users_passwords}
 
     def start(self):
         """Start the database manager"""

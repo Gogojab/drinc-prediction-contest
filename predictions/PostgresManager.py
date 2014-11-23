@@ -156,10 +156,12 @@ class PostgresManager(object):
 
     def get_members(self):
         """Get the list of DRINC members"""
-        sql = "SELECT username FROM members;"
+        sql = "SELECT username, password FROM members;"
         with self.conn.cursor() as cur:
             cur.execute(sql)
-            members = [x for (x,) in cur.fetchall()]
+            members = [(x,y) for (x,y) in cur.fetchall()]
+            print "get_members"
+            members
         return members
 
     def get_stocks(self):
@@ -172,7 +174,7 @@ class PostgresManager(object):
 
 
 if __name__ == '__main__':
-    pgm = PostgresManager(['WAN', 'DCH'], ['TEST'])
+    pgm = PostgresManager()
     # pgm.get_stock_expenditure("TEST")
 
     # trans = pgm.get_member_transactions("WAN")

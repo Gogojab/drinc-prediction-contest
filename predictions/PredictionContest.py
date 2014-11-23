@@ -15,23 +15,11 @@ import os.path
 import random
 import threading
 import time
-import tools.auth_kerberos
-import tools.auth_members
 import sys
+from cherrypy.lib import auth_basic
 sys.path.append('templates')
 
 app_dir = os.path.dirname(os.path.abspath(__file__))
-app_config = {'/':              { 'tools.sessions.on':True },
-              '/bootstrap.css': { 'tools.staticfile.on':True,
-                                  'tools.staticfile.filename':app_dir + '/css/bootstrap.min.css' },
-              '/bootstrap.js':  { 'tools.staticfile.on':True,
-                                  'tools.staticfile.filename':app_dir + '/js/bootstrap.min.js' },
-              '/jquery.js':     { 'tools.staticfile.on':True,
-                                  'tools.staticfile.filename':app_dir + '/js/jquery-1.9.1.min.js' },
-              '/highcharts.js': { 'tools.staticfile.on':True,
-                                  'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
-
-members = ['CJT', 'DCH', 'DT', 'ENH', 'GJC', 'JAC', 'JAG2', 'JJL', 'JTR', 'MAM', 'MRR', 'WAN']
 
 class PredictionContest(object):
     """CherryPy application running the monthly prediction contest"""
@@ -51,8 +39,6 @@ class PredictionContest(object):
         self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18)
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def home(self):
         """Home page for the prediction contest"""
         user = cherrypy.session['user']
@@ -60,8 +46,6 @@ class PredictionContest(object):
         return self.make_page('home.tmpl', account)
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def update_page(self, member=None):
         """Server Sent Events updating the stock prices and standings"""
         # Set headers and data.
@@ -97,8 +81,6 @@ class PredictionContest(object):
     update_page._cp_config = {'tools.encode.encoding':'utf-8'}
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def account(self, member=None):
         """Display the details of a member's account"""
         if not self.deadline_passed():
@@ -115,16 +97,12 @@ class PredictionContest(object):
         return self.make_page('account.tmpl', dict)
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def purchase(self):
         """Page to purchase a stock"""
         tickers = sorted(self.stocks.keys())
         return self.make_page('purchase.tmpl', {'stocks':tickers})
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def confirm_purchase(self, stock, cost, cancel=False):
         """Page to confirm the purchase of a stock"""
         if cancel:
@@ -148,8 +126,6 @@ class PredictionContest(object):
         return self.make_page('confirm_purchase.tmpl', {'stock':stock, 'cost':pounds, 'price':price})
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def submit_purchase(self, cancel=False):
         """Submit a purchase, after confirming that it is really what the user wants to do"""
         if cancel:
@@ -177,8 +153,6 @@ class PredictionContest(object):
         raise cherrypy.HTTPRedirect('home')
 
     @cherrypy.expose
-    @cherrypy.tools.auth_kerberos()
-    @cherrypy.tools.auth_members(users=members)
     def analysis(self):
         """Analysis page"""
         # Figure out where the money went.
@@ -349,8 +323,41 @@ def configure_logging():
     handler = getRotatingFileHandler('logs/access.log')
     log.access_log.addHandler(handler)
 
-def start_server(contest, port=7070):
+def start_server(contest, auth_details, port=7070):
     """Start the server"""
+    #users =
+    auth_details = auth_details
+
+    def validate_password(self, username, password):
+
+        print "Validating user %s, password %s" % (username, password)
+
+        if username in auth_details:
+            if password == auth_details[username]:
+                cherrypy.serving.request.login = username
+                cherrypy.session['user'] = username
+                return True
+        return False
+
+    basic_auth = {'tools.sessions.on': True,
+                  'tools.auth_basic.on': True,
+                  'tools.auth_basic.realm': 'localhost',
+                  'tools.auth_basic.checkpassword': validate_password}
+    app_config = {'/': basic_auth,
+                                    # { 'tools.sessions.on':True,
+                                    #   'tools.auth_digest.on': True,
+                                    #   'tools.auth_digest.realm': 'localhost',
+                                    #   'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(USERS),
+                                    #   'tools.auth_digest.key': 'a565c27146791cfb'},
+                  '/bootstrap.css': { 'tools.staticfile.on':True,
+                                      'tools.staticfile.filename':app_dir + '/css/bootstrap.min.css' },
+                  '/bootstrap.js':  { 'tools.staticfile.on':True,
+                                      'tools.staticfile.filename':app_dir + '/js/bootstrap.min.js' },
+                  '/jquery.js':     { 'tools.staticfile.on':True,
+                                      'tools.staticfile.filename':app_dir + '/js/jquery-1.9.1.min.js' },
+                  '/highcharts.js': { 'tools.staticfile.on':True,
+                                      'tools.staticfile.filename':app_dir + '/js/highcharts.js' }}
+
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
@@ -360,7 +367,8 @@ deadline = datetime.datetime(2014, 11, 25, 18)
 if __name__ == '__main__':
     db = DatabaseManager()
     db.start()
+
     contest = PredictionContest(db, start_date, deadline)
     contest.start()
     configure_logging()
-    start_server(contest)
+    start_server(contest, db.auth_details)
