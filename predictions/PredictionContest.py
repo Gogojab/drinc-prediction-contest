@@ -16,6 +16,7 @@ import random
 import threading
 import time
 import sys
+import hashlib
 from cherrypy.lib import auth_basic
 sys.path.append('templates')
 
@@ -330,10 +331,11 @@ def start_server(contest, auth_details, port=7070):
 
     def validate_password(self, username, password):
 
-        print "Validating user %s, password %s" % (username, password)
+        print "Validating user " % username
+        hash = hashlib.sha256(password).hexdigest()
 
         if username in auth_details:
-            if password == auth_details[username]:
+            if hash == auth_details[username]:
                 cherrypy.serving.request.login = username
                 cherrypy.session['user'] = username
                 return True
