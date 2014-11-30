@@ -52,9 +52,6 @@ class PostgresManager(object):
             cur.execute(sql, (transaction['stock'],))
 
             (price,) = cur.fetchone()
-
-            print "Price is %s" % price
-            # stock = stocks_col.get(transaction['stock'])
             cost = transaction['cost']
             value = (cost * price) / transaction['price']
 
@@ -131,6 +128,7 @@ class PostgresManager(object):
         """Update the UserHist column family"""
         # member_history_col.insert(member, {timestamp: worth})
 
+        print "Updating history for member %s with value %d" % (member, worth)
         sql = "INSERT INTO member_history (member, timestamp, value) " \
               "VALUES ((SELECT pkey FROM members WHERE username = %s), %s, %s)"
         with self.conn.cursor() as cur:

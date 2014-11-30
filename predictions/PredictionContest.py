@@ -20,6 +20,8 @@ import hashlib
 from cherrypy.lib import auth_basic
 sys.path.append('templates')
 
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 app_dir = os.path.dirname(os.path.abspath(__file__))
 
 class PredictionContest(object):
@@ -331,11 +333,10 @@ def start_server(contest, auth_details, port=7070):
 
     def validate_password(self, username, password):
 
-        print "Validating user " % username
-        hash = hashlib.sha256(password).hexdigest()
+        hashed_pw = hashlib.sha256(password).hexdigest()
 
         if username in auth_details:
-            if hash == auth_details[username]:
+            if hashed_pw == auth_details[username]:
                 cherrypy.serving.request.login = username
                 cherrypy.session['user'] = username
                 return True
@@ -346,11 +347,6 @@ def start_server(contest, auth_details, port=7070):
                   'tools.auth_basic.realm': 'localhost',
                   'tools.auth_basic.checkpassword': validate_password}
     app_config = {'/': basic_auth,
-                                    # { 'tools.sessions.on':True,
-                                    #   'tools.auth_digest.on': True,
-                                    #   'tools.auth_digest.realm': 'localhost',
-                                    #   'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(USERS),
-                                    #   'tools.auth_digest.key': 'a565c27146791cfb'},
                   '/bootstrap.css': { 'tools.staticfile.on':True,
                                       'tools.staticfile.filename':app_dir + '/css/bootstrap.min.css' },
                   '/bootstrap.js':  { 'tools.staticfile.on':True,
@@ -363,8 +359,8 @@ def start_server(contest, auth_details, port=7070):
     app = cherrypy.tree.mount(contest, '/drinc/', config=app_config)
     pywsgi.WSGIServer(('', port), app, log=None).serve_forever()
 
-start_date = datetime.datetime(2013, 11, 18, 21)
-deadline = datetime.datetime(2014, 11, 25, 18)
+start_date = datetime.datetime.strptime(os.environ['START_DATE'], DATE_FORMAT)
+deadline = datetime.datetime.strptime(os.environ['DEADLINE'], DATE_FORMAT)
 
 if __name__ == '__main__':
     db = DatabaseManager()
