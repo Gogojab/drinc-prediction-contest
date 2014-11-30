@@ -18,7 +18,7 @@ import time
 import sys
 import hashlib
 from cherrypy.lib import auth_basic
-sys.path.append('templates')
+sys.path.append('predictions/templates')
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
