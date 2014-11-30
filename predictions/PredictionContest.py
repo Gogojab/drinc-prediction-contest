@@ -369,4 +369,4 @@ if __name__ == '__main__':
     contest = PredictionContest(db, start_date, deadline)
     contest.start()
     configure_logging()
-    start_server(contest, db.auth_details)
+    start_server(contest, db.auth_details, int(os.environ['PORT']))
