@@ -189,7 +189,7 @@ class PredictionContest(object):
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
         standings = self.get_leaderboard()
         base = {'tickers':stock_data, 'standings':standings, 'past_deadline':self.deadline_passed()}
-        t = Template(file=app_dir + '/templates/' + template, searchList=[base, details])
+        t = Template(file='predictions/templates/' + template, searchList=[base, details])
         return str(t)
 
     def get_account_details(self, member):
