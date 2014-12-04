@@ -1,2 +1,2 @@
-web: python predictions/PredictionContest.py
+web: sh heroku_run.sh
 
