@@ -39,7 +39,8 @@ class PredictionContest(object):
     def start(self):
         """Start the PredictionContest"""
         self._sched.start()
-        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18)
+        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-6', hour=18, minute=1, second=0,
+                                 misfire_grace_time=10800)
 
     @cherrypy.expose
     def home(self):
@@ -288,6 +289,7 @@ class PredictionContest(object):
         """Update the member histories in the database"""
         today = datetime.date.today()
         timestamp = datetime.datetime.combine(today, datetime.time())
+        print "Updating members for timestamp %s" % timestamp
         for member in self.members:
             if self.remaining_cash(member) == 0:
                 worth = self.db.get_current_member_value(member)
