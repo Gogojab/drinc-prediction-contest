@@ -43,7 +43,7 @@ class DatabaseManager(object):
 
     def get_stock_expenditure(self, ticker):
         """Figure out how much was spent on a given stock"""
-        self._db_manager.get_stock_expenditure(ticker)
+        return self._db_manager.get_stock_expenditure(ticker)
 
     def get_member_transactions(self, member):
         """Get the transactions associated with a member"""
