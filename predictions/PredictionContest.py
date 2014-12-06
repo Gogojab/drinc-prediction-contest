@@ -272,6 +272,7 @@ class PredictionContest(object):
         make_pair = lambda date, value: [1000 * time.mktime(date.timetuple()), value]
         data = self.db.get_member_history(member, self.start_date)
         values = [make_pair(date, value) for (date, value) in data.iteritems() if value > 0]
+        values.sort(key=lambda (d, _): d)
 
         # If we don't have a 'historical' value for today, add the current
         # value.

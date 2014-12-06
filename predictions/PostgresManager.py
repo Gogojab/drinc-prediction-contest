@@ -18,8 +18,6 @@ class PostgresManager(object):
 
     def get_stock_expenditure(self, ticker):
         """Figure out how much was spent on a given stock"""
-        # try:
-        # transactions = transactions_by_stock_col.get(ticker)
 
         with self.conn.cursor() as cur:
             sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock " \
@@ -59,11 +57,6 @@ class PostgresManager(object):
 
     def get_current_member_value(self, member):
         """Get a member's current value, in pennies"""
-        # try:
-        #tids = transactions_by_member_col.get(member)
-
-        #except:
-        #    tids = {}
 
         transactions = self.get_member_transactions(member)
 
@@ -76,16 +69,6 @@ class PostgresManager(object):
 
     def record_purchase(self, member, stock, price, cost):
         """Updates the database with a record of a purchase."""
-        # transaction = {'user': member,
-        #                'stock': stock,
-        #                'date': datetime.datetime.utcnow(),
-        #                'price': price,
-        #                'cost': cost}
-        # transaction_id = uuid.uuid4()
-        #
-        # transactions_col.insert(transaction_id, transaction)
-        # transactions_by_member_col.insert(member, {transaction_id: stock})
-        # transactions_by_stock_col.insert(stock, {transaction_id: cost})
 
         sql = "INSERT INTO transactions (price, cost, member, stock) " \
               "VALUES (%s, %s, (SELECT pkey FROM members WHERE username = %s), " \
@@ -96,10 +79,6 @@ class PostgresManager(object):
 
     def get_stock_price_from_db(self, ticker):
         """Gets a recent stock price from the database"""
-        # try:
-        #     price = stocks_col.get(ticker)['price']
-        # except:
-        #     price = None
 
         with self.conn.cursor() as cur:
             sql = "SELECT price FROM stocks WHERE ticker = %s"
@@ -110,29 +89,29 @@ class PostgresManager(object):
 
     def get_member_history(self, member, start_date):
         """Get the historical value of a member's portfolio"""
-        # try:
-        #
-        #     history = member_history_col.get(member, column_start=start_date)
-        # except:
-        #     history = {}
 
         sql = "SELECT timestamp, value FROM member_history h INNER JOIN members m ON h.member = m.pkey " \
-              "WHERE m.username = %s AND timestamp >= %s;"
+              "WHERE m.username = %s AND timestamp >= %s"
         with self.conn.cursor() as cur:
             cur.execute(sql, (member, start_date))
-            history = { date : value for (date, value) in cur.fetchall()}
-
+            history = {date: value for (date, value) in cur.fetchall()}
         return history
 
     def update_member_history(self, member, timestamp, worth):
         """Update the UserHist column family"""
-        # member_history_col.insert(member, {timestamp: worth})
 
         print "Updating history for member %s with value %d" % (member, worth)
-        sql = "INSERT INTO member_history (member, timestamp, value) " \
-              "VALUES ((SELECT pkey FROM members WHERE username = %s), %s, %s)"
+        sql = "UPDATE member_history SET value = %(worth)s WHERE timestamp = %(timestamp)s AND " \
+              "member = (SELECT pkey FROM members WHERE username = %(member)s); " \
+              "INSERT INTO member_history (member, timestamp, value) " \
+              "SELECT (SELECT pkey FROM members WHERE username = %(member)s), %(timestamp)s, %(worth)s " \
+              "WHERE NOT EXISTS (SELECT 1 FROM member_history WHERE timestamp = %(timestamp)s AND " \
+              "member = (SELECT pkey FROM members WHERE username = %(member)s))"
         with self.conn.cursor() as cur:
-            cur.execute(sql, (member, timestamp, worth))
+            try:
+                cur.execute(sql, {'member': member, 'timestamp': timestamp, 'worth': worth})
+            except Exception, e:
+                print e
 
     def update_stock_histories(self):
         """Update the StockHist column family"""
