@@ -76,6 +76,7 @@ class PostgresManager(object):
 
         with self.conn.cursor() as cur:
             cur.execute(sql, (price, cost, member, stock))
+            self.conn.commit()
 
     def get_stock_price_from_db(self, ticker):
         """Gets a recent stock price from the database"""
@@ -110,6 +111,7 @@ class PostgresManager(object):
         with self.conn.cursor() as cur:
             try:
                 cur.execute(sql, {'member': member, 'timestamp': timestamp, 'worth': worth})
+                self.conn.commit()
             except Exception, e:
                 print e
 
@@ -130,6 +132,7 @@ class PostgresManager(object):
               "WHERE NOT EXISTS (SELECT 1 FROM stocks WHERE ticker = %(ticker)s);"
         with self.conn.cursor() as cur:
             cur.execute(sql, {'price' : price, 'ticker' : ticker})
+            self.conn.commit()
 
     def get_members(self):
         """Get the list of DRINC members"""
@@ -159,6 +162,12 @@ class PostgresManager(object):
             return password_tuple[0]
         else:
             return None
+
+    def change_password(self, member, new_password_hash):
+        sql = "UPDATE members SET password = %s WHERE username = %s"
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (new_password_hash, member))
+            self.conn.commit()
 
 if __name__ == '__main__':
     pgm = PostgresManager()

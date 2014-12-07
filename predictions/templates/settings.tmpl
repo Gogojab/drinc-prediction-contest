@@ -1,0 +1,28 @@
+#from wrapper import wrapper
+#extends wrapper
+
+#def navigationList
+<ul class="nav">
+  <li><a href="home">Home</a></li>
+  <li><a href="account">Accounts</a></li>
+  <li><a href="analysis">Analysis</a></li>
+  <li class="active"><a href="settings">Settings</a></li>
+</ul>
+#end def
+
+#attr $inner_id = "settings"
+#def inner
+<h2>$member's account settings</h2>
+<h3>Change password</h3>
+
+<form action="change_password" method="post">
+  <p>New password:</p>
+  <input type="password" name="new_password" required value=""/>
+  <p>Confirm new password:</p>
+  <input type="password" name="confirm_new_password" required value=""/>
+  <p>
+    <input class="btn btn-primary" type="submit" value="Submit"/>
+    <input class="btn" type="submit" name="cancel" value="Cancel"/>
+  </p>
+</form>
+#end def

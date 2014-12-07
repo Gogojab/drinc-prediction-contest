@@ -171,6 +171,29 @@ class PredictionContest(object):
         race = json.dumps(series)
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
+    @cherrypy.expose
+    def settings(self):
+        """Settings page"""
+
+        member = cherrypy.session['user']
+
+        if member not in self.members:
+            raise cherrypy.HTTPRedirect('home')
+
+        return self.make_page('settings.tmpl', {'member': member})
+
+    @cherrypy.expose
+    def change_password(self, new_password, confirm_new_password, cancel=False):
+        if cancel:
+            raise cherrypy.HTTPRedirect('home')
+
+        if new_password == confirm_new_password:
+            hashed_pw = hashlib.sha256(new_password).hexdigest()
+            self.db.change_password(cherrypy.session['user'], hashed_pw)
+        else:
+            raise cherrypy.HTTPRedirect('settings')
+
+
     def deadline_passed(self):
         """Have we passed the deadline?"""
         return datetime.datetime.now() > self.deadline
