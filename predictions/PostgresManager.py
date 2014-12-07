@@ -149,6 +149,16 @@ class PostgresManager(object):
             stocks = {t : n for (t, n) in cur.fetchall()}
         return stocks
 
+    def get_password_hash(self, member):
+        sql = "SELECT password FROM members WHERE username = %s"
+
+        with self.conn.cursor() as cur:
+            cur.execute(sql, (member,))
+            password_tuple = cur.fetchone()
+        if password_tuple is not None:
+            return password_tuple[0]
+        else:
+            return None
 
 if __name__ == '__main__':
     pgm = PostgresManager()
@@ -179,3 +189,6 @@ if __name__ == '__main__':
     print pgm.get_members()
 
     print pgm.get_stocks()
+
+    print pgm.get_password_hash('WAN')
+    print pgm.get_password_hash('WAA')

@@ -296,6 +296,10 @@ class PredictionContest(object):
                 worth = self.db.get_current_member_value(member)
                 self.db.update_member_history(member, timestamp, worth)
 
+    def get_password_hash(self, member):
+        """Get the password hash of the member, or None if the member does not exist"""
+        return self.db.get_password_hash(member)
+
 class DecimalEncoder(json.JSONEncoder):
     """JSON encoder that understands Decimal objects"""
     def default(self, obj):
@@ -329,17 +333,17 @@ def configure_logging():
     handler = getRotatingFileHandler('logs/access.log')
     log.access_log.addHandler(handler)
 
-def start_server(contest, auth_details, port=7070):
+def start_server(contest, port=7070):
     """Start the server"""
-    #users =
-    auth_details = auth_details
+    contest = contest
 
     def validate_password(self, username, password):
 
         hashed_pw = hashlib.sha256(password).hexdigest()
+        stored_password = contest.get_password_hash(username)
 
-        if username in auth_details:
-            if hashed_pw == auth_details[username]:
+        if stored_password is not None:
+            if hashed_pw == stored_password:
                 cherrypy.serving.request.login = username
                 cherrypy.session['user'] = username
                 return True
@@ -372,4 +376,4 @@ if __name__ == '__main__':
     contest = PredictionContest(db, start_date, deadline)
     contest.start()
     configure_logging()
-    start_server(contest, db.auth_details, int(os.environ['PORT']))
+    start_server(contest, int(os.environ['PORT']))

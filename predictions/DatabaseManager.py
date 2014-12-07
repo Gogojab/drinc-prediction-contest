@@ -138,3 +138,7 @@ class DatabaseManager(object):
     def get_members(self):
         """Get the list of members"""
         self._db_manager.get_members()
+
+    def get_password_hash(self, member):
+        """Get the password hash of a member"""
+        return self._db_manager.get_password_hash(member)
