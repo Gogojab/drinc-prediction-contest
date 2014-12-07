@@ -14,7 +14,18 @@
 #def inner
 <h2>$member's account settings</h2>
 <h3>Change password</h3>
-
+#if $status == ""
+<p class="text-info"><i>After pressing 'Submit' you will need to reauthenticate with your new password</i></p>
+#end if
+#if $status == "success"
+<p class="text-success">Password changed</p>
+#end if
+#if $status == "nomatch"
+<p class="text-warning">Passwords did not match</p>
+#end if
+#if $status == "failed"
+<p class="text-error">Password change failed</p>
+#end if
 <form action="change_password" method="post">
   <p>New password:</p>
   <input type="password" name="new_password" required value=""/>

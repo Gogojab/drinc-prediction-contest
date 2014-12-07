@@ -145,4 +145,4 @@ class DatabaseManager(object):
 
     def change_password(self, member, new_password_hash):
         """Update the user's password"""
-        self._db_manager.change_password(member, new_password_hash)
+        return self._db_manager.change_password(member, new_password_hash)

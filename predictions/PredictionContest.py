@@ -172,7 +172,7 @@ class PredictionContest(object):
         return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
 
     @cherrypy.expose
-    def settings(self):
+    def settings(self, status=""):
         """Settings page"""
 
         member = cherrypy.session['user']
@@ -180,7 +180,7 @@ class PredictionContest(object):
         if member not in self.members:
             raise cherrypy.HTTPRedirect('home')
 
-        return self.make_page('settings.tmpl', {'member': member})
+        return self.make_page('settings.tmpl', {'member': member, 'status': status})
 
     @cherrypy.expose
     def change_password(self, new_password, confirm_new_password, cancel=False):
@@ -189,10 +189,14 @@ class PredictionContest(object):
 
         if new_password == confirm_new_password:
             hashed_pw = hashlib.sha256(new_password).hexdigest()
-            self.db.change_password(cherrypy.session['user'], hashed_pw)
-        else:
-            raise cherrypy.HTTPRedirect('settings')
+            success = self.db.change_password(cherrypy.session['user'], hashed_pw)
 
+            if success:
+                raise cherrypy.HTTPRedirect('settings?status=success')
+            else: 
+                raise cherrypy.HTTPRedirect('settings?status=failed')
+        else:
+            raise cherrypy.HTTPRedirect('settings?status=nomatch')
 
     def deadline_passed(self):
         """Have we passed the deadline?"""

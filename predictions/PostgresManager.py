@@ -166,8 +166,13 @@ class PostgresManager(object):
     def change_password(self, member, new_password_hash):
         sql = "UPDATE members SET password = %s WHERE username = %s"
         with self.conn.cursor() as cur:
-            cur.execute(sql, (new_password_hash, member))
-            self.conn.commit()
+            try:
+                cur.execute(sql, (new_password_hash, member))
+                self.conn.commit()
+                return True
+            except Exception, e:
+                print "Failed to change password for %s" % member
+                return False
 
 if __name__ == '__main__':
     pgm = PostgresManager()
