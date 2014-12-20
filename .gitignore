@@ -1,1 +1,6 @@
 *.pyc
+*.env
+predictions/.pid
+predictions/templates/*.py
+predictions/templates/*.py.bak
+logs
