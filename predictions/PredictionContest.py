@@ -39,7 +39,7 @@ class PredictionContest(object):
     def start(self):
         """Start the PredictionContest"""
         self._sched.start()
-        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-6', hour=18, minute=1, second=0,
+        self._sched.add_cron_job(self.update_member_histories, day_of_week='0-4', hour=18, minute=1, second=0,
                                  misfire_grace_time=10800)
 
     @cherrypy.expose
