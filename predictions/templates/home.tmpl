@@ -1,6 +1,18 @@
 #from wrapper import wrapper
 #extends wrapper
 
+#def navigationList
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="home">Home<span class="sr-only">(current)</span></a></li>
+        <li><a href="account">Accounts</a></li>
+#if $past_deadline
+        <li><a href="analysis">Analysis</a></li>
+#end if
+        <li class="divider"></li>
+        <li><a href="settings">Settings</a></li>
+      </ul>
+#end def
+
 #attr $inner_id = "account"
 #def inner
 <h2>Account</h2>

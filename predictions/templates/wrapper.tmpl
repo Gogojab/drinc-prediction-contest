@@ -6,23 +6,34 @@
     <title>DRINC Prediction Contest</title>
   </head>
   <body>
-    <div id="heading" class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <nav class="container">
-          <a class="brand" href="#">DRINC Prediction Contest</a>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">DRINC Prediction Contest</a>
+        </div>
+        <div class="collapse navbar-collapse" id="main-navbar">
 #block navigationList
-          <ul class="nav">
-            <li class="active"><a href="home">Home</a></li>
-#if $past_deadline
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="home">Home<span class="sr-only">(current)</span></a></li>
             <li><a href="account">Accounts</a></li>
-#end if
+#if $past_deadline
             <li><a href="analysis">Analysis</a></li>
+#end if
+            <li class="divider"></li>
             <li><a href="settings">Settings</a></li>
           </ul>
 #end block
-        </nav>
-      </div>
-    </div>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
     <div class="row-fluid" style="padding-top: 40px;">
       <div id="stocks" class="span2">
         <table class="table table-condensed table-striped table-hover">

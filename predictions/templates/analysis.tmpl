@@ -2,14 +2,15 @@
 #extends wrapper
 
 #def navigationList
-<ul class="nav">
-  <li><a href="home">Home</a></li>
+      <ul class="nav navbar-nav">
+        <li><a href="home">Home<span class="sr-only">(current)</span></a></li>
+        <li><a href="account">Accounts</a></li>
 #if $past_deadline
-  <li><a href="account">Accounts</a></li>
+        <li class="active"><a href="analysis">Analysis</a></li>
 #end if
-  <li class="active"><a href="analysis">Analysis</a></li>
-  <li><a href="settings">Settings</a></li>
-</ul>
+        <li class="divider"></li>
+        <li><a href="settings">Settings</a></li>
+      </ul>
 #end def
 
 #attr $inner_id = "analysis"
