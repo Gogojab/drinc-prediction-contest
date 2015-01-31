@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="bootstrap.css" />
     <title>DRINC Prediction Contest</title>
   </head>
   <body>
     <nav class="navbar navbar-default">
       <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -34,63 +34,61 @@
       </div><!-- /.container-fluid -->
     </nav>
 
-    <div class="row-fluid" style="padding-top: 40px;">
-      <div id="stocks" class="span2">
-        <table class="table table-condensed table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Price (p)</th>
-            </tr>
-          </thead>
-          <tbody>
-            #for $ticker in $tickers
-            <tr id="stocks-$ticker.ticker">
-              <td>
-                <a href="https://www.google.co.uk/finance?q=$ticker.ticker" rel="tooltip" data-placement="right" title="$ticker.full_name">
-                  $ticker.ticker
-                </a>
-              </td>
-              <td>$ticker.price</td>
-            </tr>
-            #end for
-          </tbody>
-        </table>
-      </div>
-      <div class="span10">
-        <div class="row-fluid">
-          <div id="$inner_id" class="span7">
+    <div class="container-fluid">
+      <div class="row" style="padding-top: 40px;">
+        <div id="stocks" class="col-md-2 col-sm-6 hidden-xs">
+          <table class="table table-condensed table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Price (p)</th>
+              </tr>
+            </thead>
+            <tbody>
+              #for $ticker in $tickers
+              <tr id="stocks-$ticker.ticker">
+                <td>
+                  <a href="https://www.google.co.uk/finance?q=$ticker.ticker" rel="tooltip" data-placement="right" title="$ticker.full_name">
+                    $ticker.ticker
+                  </a>
+                </td>
+                <td>$ticker.price</td>
+              </tr>
+              #end for
+            </tbody>
+          </table>
+        </div>
+        <div id="$inner_id" class="col-md-8 col-xs-12">
 #block inner
 #end block
-          </div>
-          <div id="standings" class="span3">
-            <h2>Standings</h2>
+        </div>
+        <div id="standings" class="col-md-2 col-xs-12">
+          <h2>Standings</h2>
 #if $past_deadline
 #set hover = 'table-hover'
 #else
 #set hover = ''
 #end if
-            <table class="table table-condensed table-striped $hover">
-              <thead>
-                <tr>
-                  <th>Member</th>
-                  <th>Value (&pound;)</th>
-                </tr>
-              </thead>
-              <tbody>
-                #for $detail in $standings
-                <tr>
+          <table class="table table-condensed table-striped $hover">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Value (&pound;)</th>
+              </tr>
+            </thead>
+            <tbody>
+              #for $detail in $standings
+              <tr>
 #if $past_deadline
-                  <td><a href="account?member=$detail.initials">$detail.initials</a></td>
+                <td><a href="account?member=$detail.initials">$detail.initials</a></td>
 #else
-                  <td>$detail.initials</td>
+                <td>$detail.initials</td>
 #end if
-                  <td>$detail.value</td>
-                </tr>
-                #end for
-              </tbody>
-            </table>
-          </div>
+                <td>$detail.value</td>
+              </tr>
+#end for
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
