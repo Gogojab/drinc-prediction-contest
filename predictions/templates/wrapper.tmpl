@@ -36,7 +36,12 @@
 
     <div class="container-fluid">
       <div class="row" style="padding-top: 40px;">
-        <div id="stocks" class="col-md-2 col-sm-6 hidden-xs">
+        <!-- The main div comes first and is then pushed after stock list on desktops. -->
+        <div id="$inner_id" class="col-md-8 col-xs-12 col-md-push-2">
+#block inner
+#end block
+        </div>
+        <div id="stocks" class="col-md-2 col-xs-6 col-md-pull-8">
           <table class="table table-condensed table-striped table-hover">
             <thead>
               <tr>
@@ -58,11 +63,8 @@
             </tbody>
           </table>
         </div>
-        <div id="$inner_id" class="col-md-8 col-xs-12">
-#block inner
-#end block
-        </div>
-        <div id="standings" class="col-md-2 col-xs-12">
+
+        <div id="standings" class="col-md-2 col-xs-6">
           <h2>Standings</h2>
 #if $past_deadline
 #set hover = 'table-hover'
