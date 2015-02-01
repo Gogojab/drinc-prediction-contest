@@ -2,14 +2,17 @@
 #extends wrapper
 
 #def navigationList
-      <ul class="nav navbar-nav">
+      <ul class="nav navbar-nav navbar-left">
         <li class="active"><a href="home">Home<span class="sr-only">(current)</span></a></li>
         <li><a href="account">Accounts</a></li>
 #if $past_deadline
         <li><a href="analysis">Analysis</a></li>
 #end if
         <li class="divider"></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
         <li><a href="settings">Settings</a></li>
+        <li><p class=navbar-text><span class="label label-primary">$member</span></p></li>
       </ul>
 #end def
 
