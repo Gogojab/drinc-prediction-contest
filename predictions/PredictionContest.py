@@ -169,7 +169,7 @@ class PredictionContest(object):
                    'name':member,
                    'data':self.get_member_history(member)} for member in self.members]
         race = json.dumps(series)
-        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race, 'member':member})
+        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race, 'member':cherrypy.session['user']})
 
     @cherrypy.expose
     def settings(self, status=""):
@@ -216,7 +216,8 @@ class PredictionContest(object):
         stock_prices = [make_data(ticker, name) for (ticker, name) in self.stocks.iteritems()]
         stock_data = sorted(stock_prices, key=lambda x: x['ticker'])
         standings = self.get_leaderboard()
-        base = {'tickers':stock_data, 'standings':standings, 'past_deadline':self.deadline_passed()}
+        user = cherrypy.session['user']
+        base = {'tickers':stock_data, 'standings':standings, 'past_deadline':self.deadline_passed(), 'user':user}
         t = Template(file='predictions/templates/' + template, searchList=[base, details])
         return str(t)
 
