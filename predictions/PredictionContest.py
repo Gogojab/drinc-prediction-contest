@@ -169,7 +169,7 @@ class PredictionContest(object):
                    'name':member,
                    'data':self.get_member_history(member)} for member in self.members]
         race = json.dumps(series)
-        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race})
+        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race, 'member':member})
 
     @cherrypy.expose
     def settings(self, status=""):

@@ -134,10 +134,20 @@
         var rows=''
         for (var i = 0; i < data.standings.length; i++) {
           var member = data.standings[i]
-          rows += '<tr>'
 #if $past_deadline
+          if (i == 0) {
+            rows += '<tr class="success">';
+          } else if (i == (data.standings.length - 1)) {
+            rows += '<tr class="danger">';
+          } else if (member.initials == "$member") {
+            rows += '<tr class="info">';
+          } else {
+            rows += '<tr>';
+          }
+          
           rows += '<td><a href="account?member='+member.initials+'">'+member.initials+'</a></td>'
 #else
+          rows += '<tr>'
           rows += '<td>'+member.initials+'</td>'
 #end if
           rows += '<td>'+member.value+'</td>'
