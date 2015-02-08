@@ -146,7 +146,7 @@ class PostgresManager(object):
 
     def get_stocks(self):
         """Get the list of current stocks"""
-        sql = "SELECT ticker, name FROM stocks;"
+        sql = "SELECT ticker, name FROM current_stocks;"
         with self.conn.cursor() as cur:
             cur.execute(sql)
             stocks = {t : n for (t, n) in cur.fetchall()}

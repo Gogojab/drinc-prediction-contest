@@ -96,10 +96,13 @@ ALTER SEQUENCE members_pkey_seq OWNED BY members.pkey;
 --
 
 CREATE TABLE stocks (
-    pkey integer NOT NULL,
-    ticker text NOT NULL,
-    price double precision,
-    name text
+  pkey serial NOT NULL,
+  ticker text NOT NULL,
+  price double precision,
+  name text,
+  bought date DEFAULT ('now'::text)::date,
+  sold date
+
 );
 
 
@@ -147,6 +150,14 @@ CREATE SEQUENCE transactions_pkey_seq
     NO MAXVALUE
     CACHE 1;
 
+
+CREATE OR REPLACE VIEW current_stocks AS 
+ SELECT stocks.pkey,
+    stocks.ticker,
+    stocks.price,
+    stocks.name
+   FROM stocks
+  WHERE stocks.bought <= 'now'::text::date AND (stocks.sold IS NULL OR stocks.sold > 'now'::text::date);
 
 --
 -- Name: transactions_pkey_seq; Type: SEQUENCE OWNED BY; Schema: public; 

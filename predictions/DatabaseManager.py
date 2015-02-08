@@ -90,7 +90,9 @@ class DatabaseManager(object):
         price = self.get_stock_price_from_db(ticker)
         if not price:
             price = self.update_stock_price(ticker)
-        return format(price, '.2f')
+
+        if price:
+            return format(price, '.2f')
 
     def get_stock_price_from_db(self, ticker):
         """Gets a recent stock price from the database"""
