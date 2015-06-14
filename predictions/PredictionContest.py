@@ -15,6 +15,7 @@ import os.path
 import random
 import threading
 import time
+import calendar
 import sys
 import hashlib
 from cherrypy.lib import auth_basic
@@ -297,7 +298,7 @@ class PredictionContest(object):
 
     def get_member_history(self, member):
         """Get the historical value of a member's portfolio for this month"""
-        make_pair = lambda date, value: [1000 * time.mktime(date.timetuple()), value]
+        make_pair = lambda date, value: [1000 * calendar.timegm(date.timetuple()), value]
         data = self.db.get_member_history(member, self.start_date)
         values = [make_pair(date, value) for (date, value) in data.iteritems() if value > 0]
         values.sort(key=lambda (d, _): d)
