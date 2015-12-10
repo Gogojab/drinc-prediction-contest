@@ -67,8 +67,11 @@ class PostgresManager(object):
 
         return total
 
-    def record_purchase(self, member, stock, price, cost):
+    def record_purchase(self, member, stock, price, cost, short):
         """Updates the database with a record of a purchase."""
+
+        if short:
+            raise NotImplementedError
 
         sql = "INSERT INTO transactions (price, cost, member, stock) " \
               "VALUES (%s, %s, (SELECT pkey FROM members WHERE username = %s), " \

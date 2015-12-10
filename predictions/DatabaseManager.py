@@ -57,9 +57,9 @@ class DatabaseManager(object):
         """Get a member's current value, in pennies"""
         return self._db_manager.get_current_member_value(member)
 
-    def record_purchase(self, member, stock, price, cost):
+    def record_purchase(self, member, stock, price, cost, short):
         """Updates the database with a record of a purchase."""
-        self._db_manager.record_purchase(member, stock, price, cost)
+        self._db_manager.record_purchase(member, stock, price, cost, short)
 
     def get_member_history(self, member, start_date):
         """Get the historical value of a member's portfolio"""

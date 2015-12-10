@@ -3,7 +3,11 @@
 
 #attr $inner_id = "confirm_purchase"
 #def inner
+#if $short
+<p>Short &pound;$cost of $stock at $price pence</p>
+#else
 <p>Buy &pound;$cost of $stock at $price pence</p>
+#end if
 <form action="submit_purchase" method="post">
   <p>
     <input class="btn btn-primary" type="submit" value="Confirm"/>

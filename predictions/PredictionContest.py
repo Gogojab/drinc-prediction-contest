@@ -108,8 +108,9 @@ class PredictionContest(object):
         return self.make_page('purchase.tmpl', {'stocks':tickers})
 
     @cherrypy.expose
-    def confirm_purchase(self, stock, cost, cancel=False):
+    def confirm_purchase(self, stock, cost, long_short, cancel=False):
         """Page to confirm the purchase of a stock"""
+        print("Confirm purchase")
         if cancel:
             raise cherrypy.HTTPRedirect('home')
 
@@ -122,13 +123,16 @@ class PredictionContest(object):
         if not price:
             raise cherrypy.HTTPRedirect('home')
 
+        short = long_short == 'short'
+
         pennies = int(100 * pounds)
         cherrypy.session['stock'] = stock
         cherrypy.session['price'] = price
         cherrypy.session['cost'] = pennies
+        cherrypy.session['short'] = short
         cherrypy.session['offerExpires'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
 
-        return self.make_page('confirm_purchase.tmpl', {'stock':stock, 'cost':pounds, 'price':price})
+        return self.make_page('confirm_purchase.tmpl', {'stock':stock, 'cost':pounds, 'price':price, 'short':short})
 
     @cherrypy.expose
     def submit_purchase(self, cancel=False):
@@ -141,6 +145,7 @@ class PredictionContest(object):
             stock = cherrypy.session.get('stock')
             price = cherrypy.session.get('price')
             cost = cherrypy.session.get('cost')
+            short = cherrypy.session.get('short')
             offerExpires = cherrypy.session.get('offerExpires')
         finally:
             cherrypy.lib.sessions.expire()
@@ -153,7 +158,7 @@ class PredictionContest(object):
         user = cherrypy.session['user']
         with self._db_lock:
             if self.is_purchase_allowed(user, stock, cost):
-                self.db.record_purchase(user, stock, price, cost)
+                self.db.record_purchase(user, stock, price, cost, short)
 
         raise cherrypy.HTTPRedirect('home')
 
