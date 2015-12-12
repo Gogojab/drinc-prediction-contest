@@ -32,12 +32,12 @@ class PostgresManager(object):
         """Get the transactions associated with a member"""
 
         with self.conn.cursor() as cur:
-            sql = "SELECT s.ticker, t.price, t.cost FROM transactions t " \
+            sql = "SELECT s.ticker, t.price, t.cost, t.short FROM transactions t " \
                   "INNER JOIN stocks s ON t.stock = s.pkey " \
                   "INNER JOIN members m ON t.member = m.pkey " \
                   "WHERE m.username = %s;"
             cur.execute(sql, (member,))
-            transactions = [{'stock': stock, 'price': price, 'cost': cost} for (stock, price, cost) in cur.fetchall()]
+            transactions = [{'stock': stock, 'price': price, 'cost': cost, 'short':short} for (stock, price, cost, short) in cur.fetchall()]
 
         return transactions
 
@@ -52,6 +52,9 @@ class PostgresManager(object):
             (price,) = cur.fetchone()
             cost = transaction['cost']
             value = (cost * price) / transaction['price']
+
+            if transaction['short']:
+                value = cost + cost - value
 
         return int(value)
 
@@ -70,15 +73,12 @@ class PostgresManager(object):
     def record_purchase(self, member, stock, price, cost, short):
         """Updates the database with a record of a purchase."""
 
-        if short:
-            raise NotImplementedError
-
-        sql = "INSERT INTO transactions (price, cost, member, stock) " \
+        sql = "INSERT INTO transactions (price, cost, member, stock, short) " \
               "VALUES (%s, %s, (SELECT pkey FROM members WHERE username = %s), " \
-              "(SELECT pkey from stocks WHERE ticker = %s))"
+              "(SELECT pkey from stocks WHERE ticker = %s), %s)"
 
         with self.conn.cursor() as cur:
-            cur.execute(sql, (price, cost, member, stock))
+            cur.execute(sql, (price, cost, member, stock, short))
             self.conn.commit()
 
     def get_stock_price_from_db(self, ticker):
