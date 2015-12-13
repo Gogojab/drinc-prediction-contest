@@ -273,6 +273,9 @@ class PredictionContest(object):
         if cost > self.remaining_cash(member=member):
             return False
 
+        if stock in self.bought_stocks(member):
+            return False
+
         # Allow the purchase.
         return True
 
@@ -296,6 +299,12 @@ class PredictionContest(object):
         cash = 100000 - spent
         return cash
 
+    def bought_stocks(self, member):
+        """List the stocks that the member has already bought"""
+
+        transactions = self.db.get_member_transactions(member)
+        return transaction['stock'] for transaction in transactions]
+        
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
         pounds = Decimal(pennies) / 100
