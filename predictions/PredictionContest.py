@@ -234,7 +234,8 @@ class PredictionContest(object):
             detail = {'stock':transaction['stock'],
                       'price':transaction['price'],
                       'cost' :self.pennies_to_pounds(transaction['cost']),
-                      'value':self.pennies_to_pounds(value_pennies)}
+                      'value':self.pennies_to_pounds(value_pennies),
+                      'short':transaction['short']}
             return detail
 
         transactions = self.db.get_member_transactions(member)

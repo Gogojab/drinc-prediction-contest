@@ -31,8 +31,17 @@
   </thead>
   <tbody>
     #for $transaction in $transactions
+    #if $transaction.short
+    <tr class="warning">
+    #else
     <tr>
-      <td>$transaction.stock</td>
+    #end if
+      <td>
+        $transaction.stock 
+        #if $transaction.short 
+          (short) 
+        #end if
+      </td>
       <td>$transaction.price</td>
       <td>$transaction.cost</td>
       <td>$transaction.value</td>
