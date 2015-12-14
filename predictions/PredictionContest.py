@@ -303,7 +303,7 @@ class PredictionContest(object):
         """List the stocks that the member has already bought"""
 
         transactions = self.db.get_member_transactions(member)
-        return transaction['stock'] for transaction in transactions]
+        return [transaction['stock'] for transaction in transactions]
         
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
