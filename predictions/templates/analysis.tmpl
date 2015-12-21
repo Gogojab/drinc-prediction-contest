@@ -22,8 +22,13 @@
 </div>
 #if $past_deadline
 <h3>Where the money went</h3>
+<h4>What we like</h4>
 <div id="expenditure" style="min-width: 350px; height: 400px">
 </div>
+<h4>Things we're not so keen on</h4>
+<div id="shortinterest" style="min-width: 350px; height: 400px">
+</div>
+
 #end if
 #end def
 
@@ -63,6 +68,37 @@ var analysis = {};
       type: 'pie',
       name: 'Total cash spent',
       data: $expenditure
+    }]
+  });
+
+  ## Pie chart showing what we don't like
+  new Highcharts.Chart({
+    chart: {
+      renderTo: 'shortinterest',
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      style: '"Helvetica Neue",Helvetica,Arial,sans-serif'
+    },
+    title: { text: null },
+    credits: { enabled: false },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: 'pointer'
+      }
+    },
+    tooltip: {
+      formatter: function() {
+        var pounds = (this.point.y / 100);
+        pounds = ((pounds % 1) === 0) ? pounds : pounds.toFixed(2);
+        return this.point.name + " \xa3" + pounds;
+      }
+    },
+    series: [{
+      type: 'pie',
+      name: 'Stocks shorted',
+      data: $shortinterest
     }]
   });
 #end if

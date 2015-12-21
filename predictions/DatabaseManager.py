@@ -41,9 +41,9 @@ class DatabaseManager(object):
         delay = 900 - (((60 * now.minute) + now.second) % 900)
         return delay
 
-    def get_stock_expenditure(self, ticker):
+    def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
-        return self._db_manager.get_stock_expenditure(ticker)
+        return self._db_manager.get_stock_expenditure(ticker, short)
 
     def get_member_transactions(self, member):
         """Get the transactions associated with a member"""

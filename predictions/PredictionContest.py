@@ -166,8 +166,10 @@ class PredictionContest(object):
     def analysis(self):
         """Analysis page"""
         # Figure out where the money went.
-        spent = self.get_all_stock_expenditure()
-        expenditure = json.dumps(spent)
+        spent_long = self.get_all_stock_expenditure(short = False)
+        spent_short = self.get_all_stock_expenditure(short = True)
+        expenditure = json.dumps(spent_long)
+        shortinterest = json.dumps(spent_short)
 
         # Figure out how the race unfolded.
         series = [{'type':'line',
@@ -175,7 +177,7 @@ class PredictionContest(object):
                    'name':member,
                    'data':self.get_member_history(member)} for member in self.members]
         race = json.dumps(series)
-        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'race':race, 'member':cherrypy.session['user']})
+        return self.make_page('analysis.tmpl', {'expenditure':expenditure, 'shortinterest':shortinterest, 'race':race, 'member':cherrypy.session['user']})
 
     @cherrypy.expose
     def settings(self, status=""):
@@ -208,9 +210,9 @@ class PredictionContest(object):
         """Have we passed the deadline?"""
         return datetime.datetime.now() > self.deadline
 
-    def get_all_stock_expenditure(self):
+    def get_all_stock_expenditure(self, short):
         """Figure out how much was spent on each stock"""
-        details = [(ticker, self.db.get_stock_expenditure(ticker)) for ticker in self.stocks]
+        details = [(ticker, self.db.get_stock_expenditure(ticker, short)) for ticker in self.stocks]
         expenditure = [{'name':ticker, 'y':y} for (ticker, y) in details if y > 0]
 
         return sorted(expenditure, key=lambda val: val['y'], reverse=True)

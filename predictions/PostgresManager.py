@@ -16,13 +16,13 @@ class PostgresManager(object):
             host=url.hostname,
             port=url.port)
 
-    def get_stock_expenditure(self, ticker):
+    def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
 
         with self.conn.cursor() as cur:
             sql = "SELECT cost FROM transactions INNER JOIN stocks ON stocks.pkey = transactions.stock " \
-                  "WHERE ticker = %s"
-            cur.execute(sql, (ticker,))
+                  "WHERE ticker = %s AND short = %s"
+            cur.execute(sql, (ticker, short))
             self.conn.commit()
             spent = sum([x for (x,) in (cur.fetchall())])
 
