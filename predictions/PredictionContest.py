@@ -50,6 +50,11 @@ class PredictionContest(object):
         account = self.get_account_details(user)
         return self.make_page('home.tmpl', account)
 
+
+    @cherrypy.expose
+    def index(self):
+        raise cherrypy.HTTPRedirect("/drinc/home")
+
     @cherrypy.expose
     def update_page(self, member=None):
         """Server Sent Events updating the stock prices and standings"""
@@ -201,7 +206,7 @@ class PredictionContest(object):
 
             if success:
                 raise cherrypy.HTTPRedirect('settings?status=success')
-            else: 
+            else:
                 raise cherrypy.HTTPRedirect('settings?status=failed')
         else:
             raise cherrypy.HTTPRedirect('settings?status=nomatch')
@@ -306,7 +311,7 @@ class PredictionContest(object):
 
         transactions = self.db.get_member_transactions(member)
         return [transaction['stock'] for transaction in transactions]
-        
+
     def pennies_to_pounds(self, pennies):
         """Utility function for converting pennies to pounds"""
         pounds = Decimal(pennies) / 100
