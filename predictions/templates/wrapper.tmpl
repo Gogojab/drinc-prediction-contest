@@ -146,7 +146,7 @@
           } else {
             rows += '<tr>';
           }
-          
+
           rows += '<td><a href="account?member='+member.initials+'">'+member.initials+'</a></td>'
 #else
           rows += '<tr>'
@@ -183,8 +183,8 @@
           var rows=''
           for (var i = 0; i < data.account.transactions.length; i++) {
             var transaction = data.account.transactions[i]
-            rows += '<tr>'
-            rows += '<td>'+transaction.stock+(transaction.short ? '(short)' : '')+'</td>'
+            rows += '<tr'+(transaction.short ? ' class="warning"' : '')+'>'
+            rows += '<td>'+transaction.stock+(transaction.short ? ' (short)' : '')+'</td>'
             rows += '<td>'+transaction.price+'</td>'
             rows += '<td>'+transaction.cost+'</td>'
             rows += '<td>'+transaction.value+'</td>'
