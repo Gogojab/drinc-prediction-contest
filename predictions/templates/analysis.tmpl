@@ -22,6 +22,7 @@
 </div>
 #if $past_deadline
 <h3>Where the money went</h3>
+<p><em>Confidence in our investments is at <span id="confidence-id"></span></em></p>
 <h4>What we like</h4>
 <div id="expenditure" style="min-width: 350px; height: 400px">
 </div>
@@ -38,8 +39,25 @@
 
 #def extra_script
 var analysis = {};
+var li = $expenditure
+var si = $shortinterest;
 \$(document).ready(function() {
 #if $past_deadline
+
+  function extract_price(stock_data) {
+    return stock_data["y"];
+  }
+
+  function sum(total, number) {
+    return total + number;
+  }
+
+  var longTotal = li.map(extract_price).reduce(sum);
+  var shortTotal = si.map(extract_price).reduce(sum);
+  var confidence = (longTotal / (longTotal + shortTotal)) * 100;
+
+  document.getElementById("confidence-id").innerHTML = Math.round(confidence, 0) + "%";
+
   ## Pie chart showing where the money was spent.
   new Highcharts.Chart({
     chart: {
