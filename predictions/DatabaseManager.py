@@ -40,9 +40,9 @@ class DatabaseManager(object):
         london = pytz.timezone('Europe/London')
         london_now = datetime.datetime.now(london)
         
-        if datetime.time(9,0) <= london_time < datetime.time(17, 0):
+        if datetime.time(9, 0) <= london_now.time() < datetime.time(17, 0):
             # Between 9am and 5pm: wait until next fifteen-minute boundary
-            delay = 900 - (((60 * now.minute) + now.second) % 900)
+            delay = 900 - (((60 * london_now.minute) + london_now.second) % 900)
         else:
             # Wait until 9am - which might be tomorrow
             london_nine_am = london_now.replace(hour=9, minute=0, second=0)
@@ -52,7 +52,8 @@ class DatabaseManager(object):
                 
             delay = (london_nine_am - london_now).total_seconds()
 
-        return delay    
+        return delay
+    
 
     def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
