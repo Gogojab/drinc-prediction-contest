@@ -47,7 +47,7 @@ class DatabaseManager(object):
             # Wait until 9am - which might be tomorrow
             london_nine_am = london_now.replace(hour=9, minute=0, second=0)
             
-            if london_nine_am < london_now::
+            if london_nine_am < london_now:
                 london_nine_am += datetime.timedelta(days=1)
                 
             delay = (london_nine_am - london_now).total_seconds()
