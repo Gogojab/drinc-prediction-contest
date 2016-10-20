@@ -37,16 +37,22 @@ class DatabaseManager(object):
     def get_requery_delay(self):
         """Say how many seconds it'll be before it's worth re-querying the database"""
         # How long is it until the next 15-minute boundary?
-        now = datetime.datetime.utcnow()
+        london = pytz.timezone('Europe/London')
+        london_now = datetime.datetime.now(london)
         
-        if now.hour >= 8 and now.hour <= 17:
+        if datetime.time(9,0) <= london_time < datetime.time(17, 0):
+            # Between 9am and 5pm: wait until next fifteen-minute boundary
             delay = 900 - (((60 * now.minute) + now.second) % 900)
-        elif now.hour < 8:
-            delay = (60 * 60 * (8 - hour)) - ((60 * now.minute) + now.second) 
         else:
-            delay = (60 * 60 * (32 - hour)) - ((60 * now.minute) + now.second) 
+            # Wait until 9am - which might be tomorrow
+            london_nine_am = london_now.replace(hour=9, minute=0, second=0)
             
-        return delay
+            if london_nine_am < london_now::
+                london_nine_am += datetime.timedelta(days=1)
+                
+            delay = (london_nine_am - london_now).total_seconds()
+
+        return delay    
 
     def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
