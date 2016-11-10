@@ -27,7 +27,6 @@ class DatabaseManager(object):
     def start(self):
         """Start the database manager"""
         self._sched.start()
-        self._sched.add_cron_job(self.update_stock_histories, day_of_week='0-4', hour=9)
         self._sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
 
     def wait_for_update(self):
@@ -126,10 +125,6 @@ class DatabaseManager(object):
             price = None
 
         return price
-
-    def update_stock_histories(self):
-        """Update the StockHist column family"""
-        self._db_manager.update_stock_histories()
 
     def update_member_history(self, member, timestamp, worth):
         """Update the UserHist column family"""

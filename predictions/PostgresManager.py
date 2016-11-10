@@ -118,16 +118,6 @@ class PostgresManager(object):
             except Exception, e:
                 print e
 
-    def update_stock_histories(self):
-        """Update the StockHist column family"""
-        # for stock in self.tickers:
-        #     dict = self.get_stock_history_from_google(stock)
-        #     stock_history_col.insert(stock, dict)
-
-        # I'm not sure what the stock history is actually for.
-        print "Not updating stock histories."
-
-
     def update_stock_price(self, ticker, price):
         """Update the Stocks column family with the latest price for a stock"""
         sql = "UPDATE stocks SET price = %(price)s WHERE ticker = %(ticker)s; " \
