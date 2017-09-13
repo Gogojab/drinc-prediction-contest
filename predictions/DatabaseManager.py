@@ -17,7 +17,8 @@ class DatabaseManager(object):
     def __init__(self):
         """Initialization"""
         self._updated = threading.Condition()
-        self._sched = Scheduler()
+        london = pytz.timezone('Europe/London')
+        self._sched = Scheduler(timezone=london)
         self._db_manager = PostgresManager()
         self.tickers = self._db_manager.get_stocks()
         users_passwords = self._db_manager.get_members()
@@ -39,21 +40,21 @@ class DatabaseManager(object):
         # How long is it until the next 15-minute boundary?
         london = pytz.timezone('Europe/London')
         london_now = datetime.datetime.now(london)
-        
-        if datetime.time(9, 0) <= london_now.time() < datetime.time(17, 0):
+        london_nine_am = london_now.replace(hour=9, minute=0, second=0)
+        london_five_pm = london_now.replace(hour=17, minute=0, second=0)
+
+        if london_nine_am <= london_now < london_five_pm:
             # Between 9am and 5pm: wait until next fifteen-minute boundary
             delay = 900 - (((60 * london_now.minute) + london_now.second) % 900)
         else:
             # Wait until 9am - which might be tomorrow
-            london_nine_am = london_now.replace(hour=9, minute=0, second=0)
-            
             if london_nine_am < london_now:
                 london_nine_am += datetime.timedelta(days=1)
-                
+
             delay = (london_nine_am - london_now).total_seconds()
 
         return delay
-    
+
 
     def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
