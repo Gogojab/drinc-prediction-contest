@@ -1,10 +1,10 @@
 from apscheduler.scheduler import Scheduler
 from decimal import Decimal
 import datetime
+import json
 import pytz
 import requests
 import threading
-from bs4 import BeautifulSoup
 from PostgresManager import PostgresManager
 
 
@@ -95,16 +95,17 @@ class DatabaseManager(object):
 
     def get_stock_price_from_google(self, ticker):
         """Returns the latest stock price from Google Finance"""
-        url = 'http://www.google.com/finance?q=%s' % ticker
+        url = 'http://www.google.com/finance'
+        params = {
+            'q': ticker,
+            'output': 'json'
+        }
         try:
-            rsp = requests.get(url)
-            price = (
-                BeautifulSoup(rsp.text, "html.parser")
-                .find("div", {"id": "price-panel"})
-                .find("span", {"class": "pr"})
-                .text
-            )
-            price = price.strip().replace(',', '')
+            # Weirdly the response is only JSON-ish... must massage it into shape before parsing.
+            rsp = requests.get(url, params=params)
+            body = rsp.text.decode('string_escape')[3:]
+            body = json.loads(body)
+            price = body[0]['l'].replace(',', '')
             price = Decimal(price)
         except:
             price = None
