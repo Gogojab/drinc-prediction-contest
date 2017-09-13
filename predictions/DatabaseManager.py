@@ -79,25 +79,6 @@ class DatabaseManager(object):
         """Get the historical value of a member's portfolio"""
         return self._db_manager.get_member_history(member, start_date)
 
-    def get_stock_history_from_google(self, ticker):
-        """Goes to the internet, and returns a dictionary in which the keys are dates,
-        and the values are prices"""
-        url = 'http://www.google.com/finance/historical?q=%s&output=csv' % ticker
-        data = urllib2.urlopen(url).read()
-
-        reader = csv.reader(data.split())
-        reader.next()
-
-        dict = {}
-        for row in reader:
-            (date, closing) = (row[0], row[4])
-            struct = time.strptime(date, '%d-%b-%y')
-            dt = datetime.datetime(*struct[:6])
-            price = Decimal(closing)
-            dict[dt] = price
-
-        return dict
-
     def get_stock_price(self, ticker):
         """Gets a stock price, first trying the database and if that fails then
         going to Google and updating the database with the result"""
