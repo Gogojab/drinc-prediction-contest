@@ -1,4 +1,6 @@
 APScheduler==2.0.0
+beautifulsoup4==4.6.0
+bs4==0.0.1
 Cheetah==2.4.4
 CherryPy==3.6.0
 Markdown==2.5.1
@@ -7,8 +9,8 @@ gevent==1.0.1
 greenlet==0.4.4
 kerberos==1.1.1
 psycopg2==2.5.4
-pycassa==1.11.0
 pytz==2014.7
+requests==2.18.4
 six==1.8.0
 thrift==0.9.1
 tzlocal==1.1.1

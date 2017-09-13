@@ -1,15 +1,10 @@
 from apscheduler.scheduler import Scheduler
 from decimal import Decimal
-import csv
 import datetime
-import itertools
-import json
-import pycassa
 import pytz
+import requests
 import threading
-import time
-import urllib2
-import uuid
+from bs4 import BeautifulSoup
 from PostgresManager import PostgresManager
 
 
@@ -22,13 +17,18 @@ class DatabaseManager(object):
         self._db_manager = PostgresManager()
         self.tickers = self._db_manager.get_stocks()
         users_passwords = self._db_manager.get_members()
-        self.members = [x for (x,y) in users_passwords]
-        self.auth_details = {x: y for (x,y) in users_passwords}
+        self.members = [x for (x, y) in users_passwords]
+        self.auth_details = {x: y for (x, y) in users_passwords}
 
     def start(self):
         """Start the database manager"""
         self._sched.start()
-        self._sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
+        self._sched.add_cron_job(
+            self.update_stock_prices,
+            day_of_week='0-4',
+            hour='8-17',
+            minute='0,15,30,45'
+        )
 
     def wait_for_update(self):
         """Block until the database is updated"""
@@ -54,7 +54,6 @@ class DatabaseManager(object):
             delay = (london_nine_am - london_now).total_seconds()
 
         return delay
-
 
     def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
@@ -96,12 +95,16 @@ class DatabaseManager(object):
 
     def get_stock_price_from_google(self, ticker):
         """Returns the latest stock price from Google Finance"""
-        url = 'http://finance.google.com/finance/info?q=%s' % ticker
+        url = 'http://www.google.com/finance?q=%s' % ticker
         try:
-            lines = urllib2.urlopen(url).read().splitlines()
-            quote = json.loads(''.join([x for x in lines if x not in ('// [', ']')]))
-            price = quote['l_cur'].replace(',','')
-            price = ''.join(itertools.dropwhile(lambda x: x.isalpha(), price))
+            rsp = requests.get(url)
+            price = (
+                BeautifulSoup(rsp.text, "html.parser")
+                .find("div", {"id": "price-panel"})
+                .find("span", {"class": "pr"})
+                .text
+            )
+            price = price.strip().replace(',', '')
             price = Decimal(price)
         except:
             price = None
