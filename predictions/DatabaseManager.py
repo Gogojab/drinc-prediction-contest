@@ -1,15 +1,10 @@
 from apscheduler.scheduler import Scheduler
 from decimal import Decimal
-import csv
 import datetime
-import itertools
 import json
-import pycassa
 import pytz
+import requests
 import threading
-import time
-import urllib2
-import uuid
 from PostgresManager import PostgresManager
 
 
@@ -17,17 +12,23 @@ class DatabaseManager(object):
     def __init__(self):
         """Initialization"""
         self._updated = threading.Condition()
-        self._sched = Scheduler()
+        london = pytz.timezone('Europe/London')
+        self._sched = Scheduler(timezone=london)
         self._db_manager = PostgresManager()
         self.tickers = self._db_manager.get_stocks()
         users_passwords = self._db_manager.get_members()
-        self.members = [x for (x,y) in users_passwords]
-        self.auth_details = {x: y for (x,y) in users_passwords}
+        self.members = [x for (x, y) in users_passwords]
+        self.auth_details = {x: y for (x, y) in users_passwords}
 
     def start(self):
         """Start the database manager"""
         self._sched.start()
-        self._sched.add_cron_job(self.update_stock_prices, day_of_week='0-4', hour='8-17', minute='0,15,30,45')
+        self._sched.add_cron_job(
+            self.update_stock_prices,
+            day_of_week='0-4',
+            hour='8-17',
+            minute='0,15,30,45'
+        )
 
     def wait_for_update(self):
         """Block until the database is updated"""
@@ -39,21 +40,20 @@ class DatabaseManager(object):
         # How long is it until the next 15-minute boundary?
         london = pytz.timezone('Europe/London')
         london_now = datetime.datetime.now(london)
-        
-        if datetime.time(9, 0) <= london_now.time() < datetime.time(17, 0):
+        london_nine_am = london_now.replace(hour=9, minute=0, second=0)
+        london_five_pm = london_now.replace(hour=17, minute=0, second=0)
+
+        if london_nine_am <= london_now < london_five_pm:
             # Between 9am and 5pm: wait until next fifteen-minute boundary
             delay = 900 - (((60 * london_now.minute) + london_now.second) % 900)
         else:
             # Wait until 9am - which might be tomorrow
-            london_nine_am = london_now.replace(hour=9, minute=0, second=0)
-            
             if london_nine_am < london_now:
                 london_nine_am += datetime.timedelta(days=1)
-                
+
             delay = (london_nine_am - london_now).total_seconds()
 
         return delay
-    
 
     def get_stock_expenditure(self, ticker, short):
         """Figure out how much was spent on a given stock"""
@@ -79,25 +79,6 @@ class DatabaseManager(object):
         """Get the historical value of a member's portfolio"""
         return self._db_manager.get_member_history(member, start_date)
 
-    def get_stock_history_from_google(self, ticker):
-        """Goes to the internet, and returns a dictionary in which the keys are dates,
-        and the values are prices"""
-        url = 'http://www.google.com/finance/historical?q=%s&output=csv' % ticker
-        data = urllib2.urlopen(url).read()
-
-        reader = csv.reader(data.split())
-        reader.next()
-
-        dict = {}
-        for row in reader:
-            (date, closing) = (row[0], row[4])
-            struct = time.strptime(date, '%d-%b-%y')
-            dt = datetime.datetime(*struct[:6])
-            price = Decimal(closing)
-            dict[dt] = price
-
-        return dict
-
     def get_stock_price(self, ticker):
         """Gets a stock price, first trying the database and if that fails then
         going to Google and updating the database with the result"""
@@ -114,12 +95,17 @@ class DatabaseManager(object):
 
     def get_stock_price_from_google(self, ticker):
         """Returns the latest stock price from Google Finance"""
-        url = 'http://finance.google.com/finance/info?q=%s' % ticker
+        url = 'http://www.google.com/finance'
+        params = {
+            'q': ticker,
+            'output': 'json'
+        }
         try:
-            lines = urllib2.urlopen(url).read().splitlines()
-            quote = json.loads(''.join([x for x in lines if x not in ('// [', ']')]))
-            price = quote['l_cur'].replace(',','')
-            price = ''.join(itertools.dropwhile(lambda x: x.isalpha(), price))
+            # Weirdly the response is only JSON-ish... must massage it into shape before parsing.
+            rsp = requests.get(url, params=params)
+            body = rsp.text.decode('string_escape')[3:]
+            body = json.loads(body)
+            price = body[0]['l'].replace(',', '')
             price = Decimal(price)
         except:
             price = None
